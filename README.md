@@ -1,5 +1,7 @@
 # README
 
+WORK IN PROGRESS
+
 ## Description
 
 Use the command line interface to:
