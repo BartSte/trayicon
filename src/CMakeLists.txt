@@ -1,4 +1,3 @@
-find_package(spdlog REQUIRED)
 find_package(Qt6 COMPONENTS Widgets)
 
 file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*")
@@ -10,6 +9,6 @@ target_include_directories(
   PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/include
   INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
 
-set(LINK_LIBS spdlog::spdlog_header_only Qt6::Widgets)
+set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
 
 target_link_libraries(trayiconapp PUBLIC ${LINK_LIBS})
