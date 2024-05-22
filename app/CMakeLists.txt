@@ -1,2 +1,3 @@
-add_executable(kmonadtray main.cpp)
-target_link_libraries(kmonadtray PRIVATE trayiconapp)
+add_executable(kmonad-tray main.cpp ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
+
+target_link_libraries(kmonad-tray PRIVATE kmonadtray)

@@ -1,6 +1,6 @@
-#include "trayiconapp.hpp"
+#include <app.hpp>
 
 int main(int argc, char *argv[]) {
-  TrayIconApp app(argc, argv);
+  App app(argc, argv);
   return app.exec();
 }
