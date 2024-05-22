@@ -1,8 +1,8 @@
 #include <exceptions.hpp>
 
-KMonadTrayException::KMonadTrayException(const std::string &msg)
+TrayIconException::TrayIconException(const std::string &msg)
     : message(msg) {}
 
-const char *KMonadTrayException::what() const noexcept {
+const char *TrayIconException::what() const noexcept {
   return message.c_str();
 }

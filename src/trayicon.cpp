@@ -1,6 +1,6 @@
 #include <trayicon.hpp>
 
 TrayIcon::TrayIcon(QObject *parent) : QSystemTrayIcon(parent) {
-  setIcon(QIcon(":/kmonad.svg"));
-  setToolTip("KMonad");
+  /*setIcon(QIcon(":/icon.svg"));*/
+  setToolTip("Some icon.");
 }

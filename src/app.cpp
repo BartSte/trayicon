@@ -6,16 +6,16 @@
 #include <spdlog/spdlog.h>
 
 App::App(int &argc, char **argv) : QApplication(argc, argv) {
-  setApplicationDisplayName("KMonad Tray Icon");
-  setApplicationName("kmonadtray");
+  setApplicationDisplayName("Tray Icon");
+  setApplicationName("trayicon");
   setApplicationVersion("0.0.0");
-  setWindowIcon(QIcon(":/kmonad.svg"));
+  /*setWindowIcon(QIcon(":/icon.svg"));*/
 }
 
 void App::check_tray_available() {
   if (!QSystemTrayIcon::isSystemTrayAvailable()) {
     std::string msg = "System tray not available";
-    throw KMonadTrayException(msg);
+    throw TrayIconException(msg);
   } else {
     spdlog::info("System tray available");
   }

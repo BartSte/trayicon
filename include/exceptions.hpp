@@ -3,11 +3,11 @@
 #include <exception>
 #include <string>
 
-class KMonadTrayException : public std::exception {
+class TrayIconException : public std::exception {
  private:
   std::string message;
 
  public:
-  explicit KMonadTrayException(const std::string &msg);
+  explicit TrayIconException(const std::string &msg);
   const char *what() const noexcept override;
 };

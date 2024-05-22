@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(kmonadtray LANGUAGES CXX)
+project(trayicon LANGUAGES CXX)
 set(PROJECT_VERSION 0.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
