@@ -11,5 +11,6 @@ class App : public QApplication {
 
  public:
   App(int &argc, char **argv);
-  void show();
+  void check_tray_available();
+  int execute();
 };
