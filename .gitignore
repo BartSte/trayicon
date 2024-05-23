@@ -1,3 +1,4 @@
 .cache
 build
 Session.vim
+include/version.h
