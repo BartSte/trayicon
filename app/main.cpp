@@ -1,5 +1,5 @@
-#include "exceptions.hpp"
 #include <app.hpp>
+#include <exceptions.hpp>
 #include <spdlog/spdlog.h>
 
 int main(int argc, char *argv[]) {

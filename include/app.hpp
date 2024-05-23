@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cli.hpp"
+#include <cli.hpp>
 #include <QApplication>
 #include <trayicon.hpp>
 
@@ -12,6 +12,9 @@ class App : public QApplication {
   char **argv;
   TrayIcon gui;
   ArgParse parser;
+
+  static std::string name;
+  static std::string description;
 
  public:
   App(int &argc, char **argv);
