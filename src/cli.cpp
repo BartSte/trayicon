@@ -12,8 +12,9 @@
  * @param argc The number of arguments
  * @param argv The arguments
  */
-ArgParse::ArgParse(std::string program, std::string description)
-    : options(program, description) {
+cxxopts::Options cli::make(std::string program, std::string description) {
+
+  cxxopts::Options options(program, description);
 
   // clang-format off
   options.add_options()
@@ -21,23 +22,15 @@ ArgParse::ArgParse(std::string program, std::string description)
 
     ("v,version", "Returns the version number.")
 
+    ("i,icon", "The icon to display.", DEFAULT("icon.svg"))
+
     ("l,loglevel", "Set the loglevel to CRITICAL, ERROR, WARNING, INFO, or DEBUG", 
-      DEFAULT("warning"));
+      DEFAULT("warning"))
+
+    ("command", "The command to run.", cxxopts::value<std::string>());
   // clang-format on
-}
 
-/**
- * @brief Parse the arguments
- *
- * @return a cxxopts::ParseResult object
- */
-cxxopts::ParseResult ArgParse::parse(int argc, char *argv[]) {
-  return options.parse(argc, argv);
-}
+  options.parse_positional("command");
 
-/**
- * @brief Get the help string
- *
- * @return The help string
- */
-std::string ArgParse::help() { return options.help(); }
+  return options;
+}

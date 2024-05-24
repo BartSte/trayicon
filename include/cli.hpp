@@ -3,13 +3,8 @@
 #include <cxxopts.hpp>
 #include <string>
 
-class ArgParse {
+namespace cli {
 
- public:
-  ArgParse(std::string program, std::string description);
-  cxxopts::ParseResult parse(int argc, char *argv[]);
-  std::string help();
+cxxopts::Options make(std::string program, std::string description);
 
- private:
-  cxxopts::Options options;
-};
+} // namespace cli
