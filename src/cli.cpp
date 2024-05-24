@@ -6,15 +6,8 @@
 
 #define DEFAULT cxxopts::value<std::string>()->default_value
 
-/**
- * @brief Construct a new Arg Parse:: Arg Parse object
- *
- * @param argc The number of arguments
- * @param argv The arguments
- */
-cxxopts::Options cli::make(std::string program, std::string description) {
-
-  cxxopts::Options options(program, description);
+Cli::Cli(int argc, char *argv[], std::string program, std::string description)
+    : argc(argc), argv(argv), options(program, description) {
 
   // clang-format off
   options.add_options()
@@ -31,6 +24,8 @@ cxxopts::Options cli::make(std::string program, std::string description) {
   // clang-format on
 
   options.parse_positional("command");
-
-  return options;
 }
+
+cxxopts::ParseResult Cli::parse() { return options.parse(argc, argv); }
+
+std::string Cli::help() { return options.help(); }

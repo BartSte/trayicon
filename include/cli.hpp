@@ -3,8 +3,14 @@
 #include <cxxopts.hpp>
 #include <string>
 
-namespace cli {
+class Cli {
+ private:
+  int argc;
+  char **argv;
+  cxxopts::Options options;
 
-cxxopts::Options make(std::string program, std::string description);
-
-} // namespace cli
+ public:
+  Cli(int argc, char *argv[], std::string program, std::string description);
+  cxxopts::ParseResult parse();
+  std::string help();
+};
