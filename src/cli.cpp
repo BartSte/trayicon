@@ -23,7 +23,7 @@ Cli::Cli(int argc, char *argv[], std::string program, std::string description)
 
     ("v,version", "Returns the version number.")
 
-    ("i,icon", "The icon to display.", DEFAULT("icon.svg"))
+    ("i,icon", "The icon to display.", DEFAULT(":/default.svg"))
 
     ("l,loglevel", "Set the loglevel to CRITICAL, ERROR, WARNING, INFO, or DEBUG", 
       DEFAULT("warning"))

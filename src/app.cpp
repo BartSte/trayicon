@@ -5,16 +5,19 @@
 #include <cli.hpp>
 #include <cxxopts.hpp>
 #include <exceptions.hpp>
+#include <fmt/core.h>
 #include <iostream>
 #include <qprocess.h>
-#include <qsystemtrayicon.h>
 #include <spdlog/spdlog.h>
+#include <string>
 #include <version.h>
 
 std::string App::name = "trayicon";
 
 std::string App::description =
     "Display an icon in the system tray to control your application";
+
+std::string App::tooltip = "Icon for the command {}";
 
 /**
  * @brief Constructor.
@@ -104,7 +107,8 @@ int App::execute() {
   } else {
     check_command(opts);
     check_tray_available();
-    gui.show();
+
+    show_gui(opts);
     start_process(opts["command"].as<std::string>());
 
     spdlog::debug("Starting event loop");
@@ -158,6 +162,16 @@ void App::print_help() { std::cout << cli.help() << std::endl; }
  */
 void App::print_version() {
   std::cout << "trayicon version: " << PROJECT_VERSION << std::endl;
+}
+
+void App::show_gui(cxxopts::ParseResult opts) {
+  std::string command = opts["command"].as<std::string>();
+  std::string tooltip = fmt::format(App::tooltip, command);
+  std::string icon_path = opts["icon"].as<std::string>();
+
+  gui.setIcon(QIcon(QString::fromStdString(icon_path)));
+  gui.setToolTip(QString::fromStdString(tooltip));
+  gui.show();
 }
 
 /**
