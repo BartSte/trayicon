@@ -5,6 +5,11 @@
 #include <qprocess.h>
 #include <trayicon.hpp>
 
+/**
+ * @class App
+ * @brief Main application class that handles the execution of the application.
+ *
+ */
 class App : public QApplication {
 
  private:
@@ -18,6 +23,7 @@ class App : public QApplication {
   static std::string description;
 
   void connect_signals();
+  std::string error_to_string(QProcess::ProcessError error);
   void check_command(cxxopts::ParseResult opts);
   void check_tray_available();
   void set_logger(std::string log_level);

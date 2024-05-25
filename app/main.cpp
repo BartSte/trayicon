@@ -2,6 +2,13 @@
 #include <exceptions.hpp>
 #include <spdlog/spdlog.h>
 
+/**
+ * @brief entry point of the application. All errors that are not expected to
+ * occur are logged as critical errors. Expected errors are logged as errors and
+ * are typically thrown as TrayIconExceptions.
+ *
+ * @return int exit code of the application
+ */
 int main(int argc, char *argv[]) {
   int exit_code = 1;
   try {

@@ -6,6 +6,14 @@
 
 #define DEFAULT cxxopts::value<std::string>()->default_value
 
+/**
+ * @brief Constructor.
+ *
+ * @param argc number of arguments
+ * @param argv array of arguments
+ * @param program the name of the program
+ * @param description a description of the program
+ */
 Cli::Cli(int argc, char *argv[], std::string program, std::string description)
     : argc(argc), argv(argv), options(program, description) {
 
@@ -26,6 +34,16 @@ Cli::Cli(int argc, char *argv[], std::string program, std::string description)
   options.parse_positional("command");
 }
 
+/**
+ * @brief Wrapper for cxxopts::Options::parse().
+ *
+ * @return the result of the parse
+ */
 cxxopts::ParseResult Cli::parse() { return options.parse(argc, argv); }
 
+/**
+ * @brief Wrapper for cxxopts::Options::help().
+ *
+ * @return the help message
+ */
 std::string Cli::help() { return options.help(); }
