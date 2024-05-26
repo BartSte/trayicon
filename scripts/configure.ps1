@@ -2,13 +2,16 @@ param(
     [bool]$Help = $false,
     [bool]$Clean = $false,
     [string]$BuildType = "Release",
-    [string]$QtDir = "C:\Qt\6.7.1\mingw_64",
+    [string]$QtDir = "C:\Qt\6.7.1\msvc2019_64",
     [string[]]$CMakeArgs = @()
 )
 
 function ShowHelp() {
     $msg = @"
 Usage: configure.ps1 [-Help] [-Clean] [-BuildType <Release|Debug>]
+
+Make sure you call vcvarsall.bat <architecture> and also qtenv2.bat before
+calling this command.
 
 Configures a build of the project. It is assumed that the depedencies are
 installed and are discoverable by cmake. The following is the default behavior:
