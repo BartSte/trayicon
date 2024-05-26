@@ -31,7 +31,7 @@ class App : public QApplication {
   void print_help();
   void print_version();
   void show_gui(cxxopts::ParseResult opts);
-  void start_process(std::string command);
+  void start_process(std::string program_, std::vector<std::string> args_);
 
  public:
   App(int &argc, char **argv);

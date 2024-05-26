@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+this_dir=$(dirname "$(readlink -f "$0")")
+usage="Usage: $0 dowloads the qt online installer an makes it executable. If the 
+installer is already it will not be downloaded again.
+
+Options:
+    -h, --help      Display this help and exit"
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "$usage"
+    exit 0
+fi
+
+if [ -f "$this_dir/qt-installer.run" ]; then
+    echo "Qt installer already downloaded."
+    exit 0
+fi
+
+echo "Downloading Qt installer..."
+url="https://download.qt.io/official_releases/online_installers/qt-unified-linux-x64-online.run"
+wget -O "$this_dir"/qt-installer.run "$url"
+chmod +x "$this_dir"/qt-installer.run
+echo "Qt installer downloaded and made executable."

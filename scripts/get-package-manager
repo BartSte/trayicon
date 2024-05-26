@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v apt &>/dev/null; then
+    echo "apt"
+elif command -v pacman &>/dev/null; then
+    echo "pacman"
+else
+    echo "No supported package manager found" >&2
+    exit 1
+fi

@@ -109,7 +109,8 @@ int App::execute() {
     check_tray_available();
 
     show_gui(opts);
-    start_process(opts["command"].as<std::string>());
+    start_process(opts["program"].as<std::string>(),
+                  opts["args"].as<std::vector<std::string>>());
 
     spdlog::debug("Starting event loop");
     exit_code = QApplication::exec();
@@ -134,8 +135,8 @@ void App::set_logger(std::string log_level) {
  * @param opts The parsed options
  */
 void App::check_command(cxxopts::ParseResult opts) {
-  if (opts.count("command")) {
-    spdlog::info("Command to run: {}", opts["command"].as<std::string>());
+  if (opts.count("program")) {
+    spdlog::info("Command to run: {}", opts["program"].as<std::string>());
   } else {
     throw TrayIconException("No command provided");
   }
@@ -165,7 +166,7 @@ void App::print_version() {
 }
 
 void App::show_gui(cxxopts::ParseResult opts) {
-  std::string command = opts["command"].as<std::string>();
+  std::string command = opts["program"].as<std::string>();
   std::string tooltip = fmt::format(App::tooltip, command);
   std::string icon_path = opts["icon"].as<std::string>();
 
@@ -179,8 +180,16 @@ void App::show_gui(cxxopts::ParseResult opts) {
  *
  * @param command
  */
-void App::start_process(std::string command) {
-  process->setProgram(QString::fromStdString(command));
-  spdlog::debug("Starting process: {}", command);
+void App::start_process(std::string program_, std::vector<std::string> args_) {
+  QString program = QString::fromStdString(program_);
+  QStringList args;
+  for (auto &arg : args_) {
+    args << QString::fromStdString(arg);
+  }
+  process->setProgram(program);
+  process->setArguments(args);
+  spdlog::debug("Starting following command: {}{}",
+                process->program().toStdString(),
+                process->arguments().join(" ").toStdString());
   process->start();
 }

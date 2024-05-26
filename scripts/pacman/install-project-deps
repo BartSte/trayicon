@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Installing build dependencies"
+sudo pacman -S --noconfirm --needed clang ninja git cmake llvm pkg-config
+
+echo "Installing project dependencies"
+sudo pacman -S --noconfirm --needed boost spdlog
+
+echo "Installing Qt dependencies"
+sudo pacman -S --noconfirm --needed libpulse xorg libxkbcommon-x11 libxrender openssl wayland libxi libxkbcommon libxkbcommon-x11 libxrender openssl 
+sudo pacman -S --noconfirm libva || true
+sudo pacman -S --noconfirm libdrm || true

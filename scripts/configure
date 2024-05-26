@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage="Usage: $0 
+Configures a build of the project. It is assumed that the depedencies are
+installed and are discoverable by cmake. The following is the default behavior:
+- The generator is Ninja
+- The build type is Release
+- The build is stored in a folder named build in the root of the project
+- The testst are not build (can be enabled with \`-- -DBUILD_TESTING=ON\`)
+
+All arguments after -- are directly appended to cmake.
+
+Additionally, the following is supported by default:
+- A custom build of Qt 6.6 may be located at 3rdparty/Qt
+
+Options:
+    --help                  Show this help message
+    --clean                 Remove the build folder before configuring
+    --build-type <type>     Set the build type to Debug, Release, or
+                            RelWithDebInfo (default: Release)"
+
+this_dir=$(dirname "$(realpath "${BASH_SOURCE:-$0}")")
+
+root="$this_dir/.."
+qt_dir="$root/3rdparty/Qt"
+build_type="Release"
+
+clean() {
+    echo "Remove old build folder"
+    rm "$root/build" -rf || true
+}
+
+configure() {
+    echo "Configure build"
+    cmake \
+        -G "Ninja" \
+        -S "$root" \
+        -B "$root/build" \
+        -DBUILD_TESTING=OFF \
+        -DCMAKE_BUILD_TYPE="$build_type" \
+        -DCMAKE_PREFIX_PATH="$qt_dir/lib/cmake" \
+        "$@"
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help)
+            echo "$usage"
+            exit 0
+            ;;
+        --clean)
+            clean
+            shift
+            ;;
+        --build-type)
+            build_type="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "$usage"
+            exit 1
+            ;;
+    esac
+done
+
+configure "$@"
+

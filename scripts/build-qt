@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+root="$(dirname "$this_dir")"
+static=true
+shared=false
+use_pch=-no-pch
+source_dir="$root/Qt"
+install_dir="$root/3rdparty/Qt"
+usage="Usage: build-qt [--static] [--shared]
+
+Build Qt with static or shared linking.
+
+Options:
+    --static            Build Qt with static linking (default=true)
+    --shared            Build Qt with shared linking (default=false)
+    --use-pch           Use precompiled headers (default=false)
+    --version           Qt version to build (default=6.7.1)
+    -s, --source-dir    Qt source directory (default=$source_dir)
+    -i, --install-dir   Qt build directory (default=$install_dir)"
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --static)
+            echo "Qt will be built with static linking"
+            static=true
+            shared=false
+            shift
+            ;;
+        --shared)
+            echo "Qt will be built with shared linking"
+            static=false
+            shared=true
+            shift
+            ;;
+        --use-pch)
+            echo "Qt will be built with precompiled headers"
+            use_pch=-pch
+            shift
+            ;;
+        -s | --source-dir)
+            source_dir="$2"
+            shift
+            shift
+            ;;
+        -i | --install-dir)
+            install_dir="$2"
+            shift
+            shift
+            ;;
+        *)
+            echo "Unknown option: $key"
+            echo "$usage"
+            exit 1
+            ;;
+    esac
+done
+
+##############################################################################
+# build-qt-static
+#   Explanation of configure flags where needed:
+#    -no-pch: Disable precompiled headers. Using precompiled improves build
+#         times, but it also increases memory usage. This results in a crash
+#         when building the project in a github workflow. The precompiled 
+#         headers can be enabled by passing --use-pch to the script. See
+#         --help.
+#   -no-gstreamer: Disable gstreamer. We use ffmpeg only.
+#   -DFFMPEG_DIR: Path to thel local ffmpeg build.
+##############################################################################
+build-qt-static() {
+    echo "Downloading Qt sources"
+    rm "$source_dir" -rf || true
+    mkdir "$source_dir"
+    "$root/scripts/download-qt" --root "$source_dir" qt.qt6.671.src
+
+    echo "Building Qt with static linking"
+    rm "$install_dir" -rf || true
+    mkdir "$install_dir"
+
+    export CC=gcc
+    export CXX=g++
+    src="$source_dir/6.7.1/Src"
+    "$src/configure" \
+        -static \
+        -release \
+        -prefix "$install_dir" \
+        -submodules qtbase,qtwayland \
+        "$use_pch" \
+        -- \
+        -S "$src" \
+        -B "$src/build" \
+        -Wdev
+
+    cmake --build "$src/build"
+    cmake --install "$src/build"
+}
+
+download-qt-shared() {
+    echo "Downloading Qt sources with shared linking"
+    rm "$source_dir" -rf || true
+    rm "$install_dir" -rf || true
+    mkdir "$source_dir"
+    mkdir "$install_dir"
+    "$root/scripts/download-qt" --root "$source_dir" qt.qt6.671.gcc_64
+    cp "${source_dir}"/6.7.1/gcc_64/** "$install_dir" -r
+}
+
+if [[ "$static" = true ]]; then
+    build-qt-static
+elif [[ "$shared" = true ]]; then
+    download-qt-shared
+else
+    echo "Unknown build type"
+    echo "$usage"
+    exit 1
+fi

@@ -1,4 +1,5 @@
 find_package(Qt6 COMPONENTS Widgets)
+message(STATUS "Qt6 found at: ${Qt6_DIR}")
 
 set(_3rdparty "${CMAKE_SOURCE_DIR}/3rdparty/include")
 file(GLOB_RECURSE SPDLOG_HEADERS "${_3rdparty}/spdlog/*")
@@ -13,5 +14,7 @@ target_include_directories(
   PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/include
   INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
 
-set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
+set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
+              Qt6::QXcbIntegrationPlugin)
+
 target_link_libraries(trayiconapp PUBLIC ${LINK_LIBS})

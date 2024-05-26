@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage="Usage setup [--help] [--shared] [--static]
+
+Install project dependencies using the system package manager. After this,
+ffmpeg and Qt will be built and installed in the 3rdparty directory. By
+default, static libraries are built and installed. If you want to build and
+install shared libraries, use the --shared option. This is much faster, as Qt
+does not need to be built from, it is only downloaded. Please note that in the
+release, static libraries are used, so you should test your changes with static
+linking in the end anyway.
+
+Options:
+    --help      Show this help message.
+    --shared    Install shared libraries. (default=false)
+    --static    Install static libraries (default=true)."
+
+shared=false
+static=true
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --help)
+            echo "$usage"
+            exit
+            ;;
+        --shared)
+            echo "Shared libraries will be installed"
+            shared=true
+            static=false
+            shift
+            ;;
+        --static)
+            echo "Static libraries will be installed"
+            shared=false
+            static=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $key"
+            echo "$usage"
+            exit 1
+            ;;
+    esac
+done
+
+this_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+root="$(dirname "$this_dir")"
+
+token="${QT_INSTALLER_JWT_TOKEN:-}"
+qt_account_file="$HOME/.local/share/Qt/qtaccount.ini"
+# check if the file $qt_account_file exists or if the token is set
+if [[ ! -f "$qt_account_file" && -z "$token" ]]; then
+    echo "No login to a Qt account found. You have 2 options:" >&2
+    echo "- Login to a Qt account by running the login-qt script" >&2
+    echo "- Set the environment variable QT_INSTALLER_JWT_TOKEN" >&2
+    exit 1
+fi
+
+echo "Installing project dependencies"
+manager="$("$root/scripts/get-package-manager")"
+"$root/scripts/${manager}/install-project-deps"
+
+echo "Installing qt"
+if [[ "$static" = true ]]; then
+    echo "Installing ffmpeg and Qt with static libraries"
+    "$root/scripts/build-qt" --static -s "$root/Qt" -i "$root/3rdparty/Qt"
+
+elif [[ "$shared" = true ]]; then
+    echo "Installing shared qt libraries"
+    "$root/scripts/build-qt" --shared -s "$root/Qt" -i "$root/3rdparty/Qt"
+
+else
+    echo "Unknown build type"
+    echo "$usage"
+    exit 1
+fi
+
