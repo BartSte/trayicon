@@ -12,7 +12,7 @@ installed and are discoverable by cmake. The following is the default behavior:
 All arguments after -- are directly appended to cmake.
 
 Additionally, the following is supported by default:
-- A custom build of Qt 6.6 may be located at 3rdparty/Qt
+- A custom build of Qt 6.7 may be located at 3rdparty/Qt
 
 Options:
     --help                  Show this help message

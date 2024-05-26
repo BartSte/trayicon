@@ -5,7 +5,6 @@
 #include <cli.hpp>
 #include <cxxopts.hpp>
 #include <exceptions.hpp>
-#include <fmt/core.h>
 #include <iostream>
 #include <qprocess.h>
 #include <spdlog/spdlog.h>
@@ -167,11 +166,10 @@ void App::print_version() {
 
 void App::show_gui(cxxopts::ParseResult opts) {
   std::string command = opts["program"].as<std::string>();
-  std::string tooltip = fmt::format(App::tooltip, command);
   std::string icon_path = opts["icon"].as<std::string>();
 
   gui.setIcon(QIcon(QString::fromStdString(icon_path)));
-  gui.setToolTip(QString::fromStdString(tooltip));
+  gui.setToolTip(QString::fromStdString(App::tooltip));
   gui.show();
 }
 

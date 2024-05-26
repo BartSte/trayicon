@@ -14,7 +14,11 @@ target_include_directories(
   PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/include
   INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
 
-set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
-              Qt6::QXcbIntegrationPlugin)
+if(WIN32)
+  set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWindowsIntegrationPlugin)
+else()
+  set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
+                Qt6::QXcbIntegrationPlugin)
+endif()
 
 target_link_libraries(trayiconapp PUBLIC ${LINK_LIBS})
