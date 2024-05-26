@@ -1,36 +1,35 @@
-param(
-    [bool]$Help = $false,
-    [bool]$Clean = $false,
-    [string]$BuildType = "Release",
-    [string]$QtDir = "C:\Qt\6.7.1\msvc2019_64",
-    [string[]]$CMakeArgs = @()
-)
+<#
+.SYNOPSIS
+Configures a build of the project.
 
-function ShowHelp() {
-    $msg = @"
-Usage: configure.ps1 [-Help] [-Clean] [-BuildType <Release|Debug>]
-
-Make sure you call vcvarsall.bat <architecture> and also qtenv2.bat before
-calling this command.
-
+.DESCRIPTION
 Configures a build of the project. It is assumed that the depedencies are
 installed and are discoverable by cmake. The following is the default behavior:
 - The generator is Ninja
 - The build type is Release
 - The build is stored in a folder named build in the root of the project
-- The testst are not build (can be enabled with \`-- -DBUILD_TESTING=ON\`)
+- The testst are not build (can be enabled with `-DBUILD_TESTING=ON`)
+- The MinGW compiler is used.
+- Qt 6.7.1 is used.
 
-Additionally, the following is supported by default:
-- A custom build of Qt 6.7 may be located at 3rdparty/Qt
+.PARAMETER BuildType
+The build type to use. Can be Release, Debug, or RelWithDebInfo. Default is Release.
 
-Options:
-    --help                  Show this help message
-    --clean                 Remove the build folder before configuring
-    --build-type <type>     Set the build type to Debug, Release, or
-                            RelWithDebInfo (default: Release)
-"@
-    Write-Output $msg
-}
+.PARAMETER QtDir
+The directory where Qt is installed. Default is C:\Qt\6.7.1\mingw_64.
+
+.PARAMETER Clean
+If present, the build folder is removed before configuring.
+
+.PARAMETER CMakeArgs
+All arguments after `--` are passed to cmake.
+#>
+param(
+    [string]$BuildType = "Release",
+    [string]$QtDir = "C:\Qt\6.7.1\mingw_64",
+    [switch]$Clean,
+    [string[]]$CMakeArgs = @()
+)
 
 function Clean() {
     if (Test-Path $Root\build) {
@@ -47,13 +46,9 @@ function Configure() {
 
 $Root = Join-Path $PSScriptRoot ".."
 
-if ($Help) {
-    ShowHelp
-    exit
-}
-
 if ($Clean) {
     Clean
 }
 
 Configure
+

@@ -1,7 +1,5 @@
 #include <cli.hpp>
-
 #include <cxxopts.hpp>
-#include <spdlog/spdlog.h>
 #include <string>
 
 #define DEFAULT cxxopts::value<std::string>()->default_value

@@ -11,3 +11,13 @@ Use the command line interface to:
 
 Next, this program will display an icon in the system tray. You can use the icon
 restart or quit the application.
+
+## Installation
+
+### From source
+
+#### Windows
+
+##### MinGW
+
+- Use windeployqt add all libs etc.
