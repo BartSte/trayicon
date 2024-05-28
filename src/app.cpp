@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QIcon>
+#include <QMenu>
 #include <QString>
 #include <app.hpp>
 #include <cli.hpp>
@@ -16,8 +17,6 @@ std::string App::name = "trayicon";
 std::string App::description =
     "Display an icon in the system tray to control your application";
 
-std::string App::tooltip = "Icon for the command {}";
-
 /**
  * @brief Constructor.
  *
@@ -28,6 +27,7 @@ App::App(int &argc, char **argv)
     : QApplication(argc, argv),
       cli(argc, argv, App::name, App::description),
       gui(),
+      menu(),
       process(std::make_unique<QProcess>()) {
   setApplicationDisplayName(QString::fromStdString(App::name));
   setApplicationName(QString::fromStdString(App::name));
@@ -40,26 +40,9 @@ App::App(int &argc, char **argv)
  * versa, such that they both quit when the other quits.
  */
 void App::connect_signals() {
-  connect(process.get(), &QProcess::started,
-          [&]() { spdlog::info("Process started"); });
-
-  connect(process.get(), &QProcess::finished,
-          [&](int exit_code, QProcess::ExitStatus status) {
-            spdlog::info("Process finished with exit code: {}", exit_code);
-            QApplication::quit();
-          });
-
-  connect(process.get(), &QProcess::errorOccurred,
-          [&](QProcess::ProcessError error) {
-            std::string msg = error_to_string(error);
-            spdlog::error("Process error occurred with message: {}", msg);
-            QApplication::quit();
-          });
-
-  connect(this, &QApplication::aboutToQuit, [&]() {
-    spdlog::info("Application is about to quit");
-    process->kill();
-  });
+  connect(this, &QApplication::aboutToQuit, process.get(), &QProcess::kill);
+  connect(process.get(), &QProcess::errorOccurred, this, QApplication::quit);
+  connect(process.get(), &QProcess::finished, this, QApplication::quit);
 }
 
 /**
@@ -111,10 +94,27 @@ int App::execute() {
     start_process(opts["program"].as<std::string>(),
                   opts["args"].as<std::vector<std::string>>());
 
-    spdlog::debug("Starting event loop");
-    exit_code = QApplication::exec();
+    if (process->waitForStarted()) {
+      spdlog::info("Process started");
+      spdlog::debug("Starting event loop");
+      exit_code = QApplication::exec();
+
+      if (process->waitForFinished()) {
+        spdlog::info("Process finished");
+      } else {
+        spdlog::error("Process failed to finish: {}",
+                      error_to_string(process->error()));
+        exit_code = 1;
+      }
+
+    } else {
+      spdlog::error("Process failed to start: {}",
+                    error_to_string(process->error()));
+      exit_code = 1;
+    }
   }
 
+  spdlog::info("Exiting with code: {}", exit_code);
   return exit_code;
 }
 
@@ -165,11 +165,16 @@ void App::print_version() {
 }
 
 void App::show_gui(cxxopts::ParseResult opts) {
-  std::string command = opts["program"].as<std::string>();
-  std::string icon_path = opts["icon"].as<std::string>();
+  menu.addAction("Quit", QApplication::quit);
+  gui.setContextMenu(&menu);
 
+  std::string icon_path = opts["icon"].as<std::string>();
+  spdlog::debug("Icon path: {}", icon_path);
   gui.setIcon(QIcon(QString::fromStdString(icon_path)));
-  gui.setToolTip(QString::fromStdString(App::tooltip));
+
+  std::string command = opts["program"].as<std::string>();
+  gui.setToolTip(QString::fromStdString(command));
+
   gui.show();
 }
 

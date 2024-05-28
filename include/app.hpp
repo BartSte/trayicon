@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QApplication>
+#include <QMenu>
 #include <cli.hpp>
 #include <qprocess.h>
 #include <qsystemtrayicon.h>
@@ -17,6 +18,7 @@ class App : public QApplication {
 
   Cli cli;
   QSystemTrayIcon gui;
+  QMenu menu;
   std::unique_ptr<QProcess> process;
 
   static std::string name;
