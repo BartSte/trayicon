@@ -2,7 +2,3 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 qt_add_executable(${PROJECT_NAME} main.cpp
                                ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
 target_link_libraries(${PROJECT_NAME} PRIVATE trayiconapp)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  WIN32_EXECUTABLE ON
-)
