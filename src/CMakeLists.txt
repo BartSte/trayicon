@@ -1,5 +1,7 @@
-find_package(Qt6 COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 message(STATUS "Qt6 found at: ${Qt6_DIR}")
+
+qt_standard_project_setup()
 
 set(_3rdparty "${CMAKE_SOURCE_DIR}/3rdparty/include")
 file(GLOB_RECURSE SPDLOG_HEADERS "${_3rdparty}/spdlog/*")
@@ -15,7 +17,7 @@ target_include_directories(
   INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
 
 if(WIN32)
-  set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWindowsIntegrationPlugin)
+  set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
 else()
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
                 Qt6::QXcbIntegrationPlugin)

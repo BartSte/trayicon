@@ -26,13 +26,14 @@ All arguments after `--` are passed to cmake.
 #>
 param(
     [string]$BuildType = "Release",
-    [string]$QtDir = "C:\Qt\6.7.1\mingw_64",
+    [string]$QtDir = "C:\Qt\6.7.1\msvc2019_64",
     [switch]$Clean,
     [string[]]$CMakeArgs = @()
 )
 
 function Clean() {
     if (Test-Path $Root\build) {
+        Write-Output "Removing build directory"
         Remove-Item $Root\build -Recurse -Force
     }
 }
@@ -41,7 +42,7 @@ function Configure() {
     Write-Output "Configuring build..."
     Write-Output "Root: $Root"
     Write-Output "QtDir: $QtDir"
-    cmake -G "Ninja" -S "$Root" -B "$Root\build" -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE="$BuildType" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" $CMakeArgs 
+    cmake -S "$Root" -B "$Root\build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" $CMakeArgs 
 }
 
 $Root = Join-Path $PSScriptRoot ".."
@@ -51,4 +52,3 @@ if ($Clean) {
 }
 
 Configure
-
