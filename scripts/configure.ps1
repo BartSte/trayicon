@@ -12,9 +12,6 @@ installed and are discoverable by cmake. The following is the default behavior:
 - The MinGW compiler is used.
 - Qt 6.7.1 is used.
 
-.PARAMETER BuildType
-The build type to use. Can be Release, Debug, or RelWithDebInfo. Default is Release.
-
 .PARAMETER QtDir
 The directory where Qt is installed. Default is C:\Qt\6.7.1\mingw_64.
 
@@ -33,7 +30,6 @@ All arguments after `--` are passed to cmake.
 
 #>
 param(
-    [string]$BuildType = "Release",
     [string]$QtDir = "C:\Qt\6.7.1\msvc2019_64",
     [switch]$Clean,
     [string]$Source = $(Join-Path $PSScriptRoot ".."),
