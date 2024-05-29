@@ -8,6 +8,7 @@
 #include <exceptions.hpp>
 #include <iostream>
 #include <qprocess.h>
+#include <signal_handlers.hpp>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <version.h>
@@ -57,6 +58,7 @@ App::App(int &argc, char **argv)
   setApplicationName(QString::fromStdString(App::name));
   setApplicationVersion(PROJECT_VERSION);
   connect_signals();
+  setup_signal_handlers();
 }
 
 /**
