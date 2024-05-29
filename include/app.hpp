@@ -26,7 +26,6 @@ class App : public QApplication {
   static std::string tooltip;
 
   void connect_signals();
-  std::string error_to_string(QProcess::ProcessError error);
   void check_command(cxxopts::ParseResult opts);
   void check_tray_available();
   void set_logger(std::string log_level);
@@ -34,6 +33,7 @@ class App : public QApplication {
   void print_version();
   void show_gui(cxxopts::ParseResult opts);
   void start_process(std::string program_, std::vector<std::string> args_);
+  int run_event_loop();
 
  public:
   App(int &argc, char **argv);

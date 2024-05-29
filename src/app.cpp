@@ -12,6 +12,30 @@
 #include <string>
 #include <version.h>
 
+/**
+ * @brief Converts a QProcess::ProcessError to a string.
+ *
+ * @param error the QProcess::ProcessError enum
+ */
+std::string err2str(QProcess::ProcessError error) {
+  switch (error) {
+  case QProcess::FailedToStart:
+    return "Failed to start";
+  case QProcess::Crashed:
+    return "Crashed";
+  case QProcess::Timedout:
+    return "Timed out";
+  case QProcess::WriteError:
+    return "Write error";
+  case QProcess::ReadError:
+    return "Read error";
+  case QProcess::UnknownError:
+    return "Unknown error";
+  default:
+    return "Unknown error";
+  }
+}
+
 std::string App::name = "trayicon";
 
 std::string App::description =
@@ -40,33 +64,26 @@ App::App(int &argc, char **argv)
  * versa, such that they both quit when the other quits.
  */
 void App::connect_signals() {
+  auto log_started = [&]() { spdlog::info("Process started"); };
+  auto log_finished = [&](int exit_code) {
+    spdlog::info("Process finished");
+    spdlog::debug("Process finished with code: {}", exit_code);
+  };
+  auto log_quit = [&]() { spdlog::info("Quitting application"); };
+  auto log_error = [&](QProcess::ProcessError error) {
+    spdlog::debug("Process error occurred that is expected since processes are "
+                  "killed instead of terminated. Error: {}",
+                  err2str(error));
+  };
+
+  connect(this, &QApplication::aboutToQuit, log_quit);
+  connect(process.get(), &QProcess::errorOccurred, log_error);
+  connect(process.get(), &QProcess::started, log_started);
+  connect(process.get(), &QProcess::finished, log_finished);
+
   connect(this, &QApplication::aboutToQuit, process.get(), &QProcess::kill);
   connect(process.get(), &QProcess::errorOccurred, this, QApplication::quit);
   connect(process.get(), &QProcess::finished, this, QApplication::quit);
-}
-
-/**
- * @brief Converts a QProcess::ProcessError to a string.
- *
- * @param error the QProcess::ProcessError enum
- */
-std::string App::error_to_string(QProcess::ProcessError error) {
-  switch (error) {
-  case QProcess::FailedToStart:
-    return "Failed to start";
-  case QProcess::Crashed:
-    return "Crashed";
-  case QProcess::Timedout:
-    return "Timed out";
-  case QProcess::WriteError:
-    return "Write error";
-  case QProcess::ReadError:
-    return "Read error";
-  case QProcess::UnknownError:
-    return "Unknown error";
-  default:
-    return "Unknown error";
-  }
 }
 
 /**
@@ -93,28 +110,10 @@ int App::execute() {
     show_gui(opts);
     start_process(opts["program"].as<std::string>(),
                   opts["args"].as<std::vector<std::string>>());
-
-    if (process->waitForStarted()) {
-      spdlog::info("Process started");
-      spdlog::debug("Starting event loop");
-      exit_code = QApplication::exec();
-
-      if (process->waitForFinished()) {
-        spdlog::info("Process finished");
-      } else {
-        spdlog::error("Process failed to finish: {}",
-                      error_to_string(process->error()));
-        exit_code = 1;
-      }
-
-    } else {
-      spdlog::error("Process failed to start: {}",
-                    error_to_string(process->error()));
-      exit_code = 1;
-    }
+    exit_code = run_event_loop();
   }
 
-  spdlog::info("Exiting with code: {}", exit_code);
+  spdlog::debug("Exiting with code: {}", exit_code);
   return exit_code;
 }
 
@@ -189,10 +188,28 @@ void App::start_process(std::string program_, std::vector<std::string> args_) {
   for (auto &arg : args_) {
     args << QString::fromStdString(arg);
   }
+
   process->setProgram(program);
   process->setArguments(args);
   spdlog::debug("Starting following command: {}{}",
                 process->program().toStdString(),
                 process->arguments().join(" ").toStdString());
   process->start();
+}
+
+int App::run_event_loop() {
+  if (!process->waitForStarted()) {
+    spdlog::error("Process failed to start: {}", err2str(process->error()));
+    return 1;
+  }
+
+  spdlog::debug("Process started, starting event loop");
+  int exit_code = QApplication::exec();
+
+  if (!process->waitForFinished()) {
+    spdlog::error("Process failed to finish: {}.", err2str(process->error()));
+    return 1;
+  }
+
+  return exit_code;
 }
