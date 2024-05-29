@@ -1,7 +1,5 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 message(STATUS "Qt6 found at: ${Qt6_DIR}")
-
-qt_standard_project_setup()
 
 set(_3rdparty "${CMAKE_SOURCE_DIR}/3rdparty/include")
 file(GLOB_RECURSE SPDLOG_HEADERS "${_3rdparty}/spdlog/*")
@@ -17,10 +15,14 @@ target_include_directories(
   INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
 
 if(WIN32)
+  message(STATUS "Building for Windows")
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
-else()
+elseif(LINUX)
+  message(STATUS "Building for Linux")
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
                 Qt6::QXcbIntegrationPlugin)
+elseif(APPLE)
+  error("Building for MacOS is not supported yet")
 endif()
 
 target_link_libraries(trayiconapp PUBLIC ${LINK_LIBS})
