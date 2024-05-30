@@ -83,7 +83,6 @@ void App::connect_signals() {
   connect(process.get(), &QProcess::started, log_started);
   connect(process.get(), &QProcess::finished, log_finished);
 
-  connect(this, &QApplication::aboutToQuit, process.get(), &QProcess::kill);
   connect(process.get(), &QProcess::errorOccurred, this, QApplication::quit);
   connect(process.get(), &QProcess::finished, this, QApplication::quit);
 }
@@ -106,13 +105,8 @@ int App::execute() {
     print_version();
 
   } else {
-    check_command(opts);
-    check_tray_available();
-
     show_gui(opts);
-    start_process(opts["program"].as<std::string>(),
-                  opts["args"].as<std::vector<std::string>>());
-    exit_code = run_event_loop();
+    exit_code = run_command(opts);
   }
 
   spdlog::debug("Exiting with code: {}", exit_code);
@@ -184,7 +178,7 @@ void App::show_gui(cxxopts::ParseResult opts) {
  *
  * @param command
  */
-void App::start_process(std::string program_, std::vector<std::string> args_) {
+bool App::start_process(std::string program_, std::vector<std::string> args_) {
   QString program = QString::fromStdString(program_);
   QStringList args;
   for (auto &arg : args_) {
@@ -197,18 +191,34 @@ void App::start_process(std::string program_, std::vector<std::string> args_) {
                 process->program().toStdString(),
                 process->arguments().join(" ").toStdString());
   process->start();
+  return process->waitForStarted();
+  ;
 }
 
-int App::run_event_loop() {
-  if (!process->waitForStarted()) {
+bool App::stop_process() {
+  if (process->state() == QProcess::NotRunning) {
+    return true;
+  }
+  process->kill();
+  return process->waitForFinished();
+}
+
+int App::run_command(cxxopts::ParseResult opts) {
+  check_command(opts);
+  check_tray_available();
+
+  int exit_code = 0;
+  bool has_started = start_process(opts["program"].as<std::string>(),
+                                   opts["args"].as<std::vector<std::string>>());
+  if (!has_started) {
     spdlog::error("Process failed to start: {}", err2str(process->error()));
     return 1;
   }
 
   spdlog::debug("Process started, starting event loop");
-  int exit_code = QApplication::exec();
+  exit_code = QApplication::exec();
 
-  if (!process->waitForFinished()) {
+  if (!stop_process()) {
     spdlog::error("Process failed to finish: {}.", err2str(process->error()));
     return 1;
   }

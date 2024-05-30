@@ -16,6 +16,7 @@ class App : public QApplication {
  private:
   Q_OBJECT;
 
+  bool process_finished;
   Cli cli;
   QSystemTrayIcon gui;
   QMenu menu;
@@ -32,8 +33,9 @@ class App : public QApplication {
   void print_help();
   void print_version();
   void show_gui(cxxopts::ParseResult opts);
-  void start_process(std::string program_, std::vector<std::string> args_);
-  int run_event_loop();
+  bool start_process(std::string program_, std::vector<std::string> args_);
+  bool stop_process();
+  int run_command(cxxopts::ParseResult opts);
 
  public:
   App(int &argc, char **argv);
