@@ -12,7 +12,8 @@
  * @param program the name of the program
  * @param description a description of the program
  */
-Cli::Cli(int argc, char *argv[], std::string program, std::string description)
+Cli::Cli(int argc, char *argv[], const std::string &program,
+         const std::string &description)
     : argc(argc), argv(argv), options(program, description) {
 
   // clang-format off

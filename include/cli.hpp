@@ -10,7 +10,7 @@ class Cli {
   cxxopts::Options options;
 
  public:
-  Cli(int argc, char *argv[], std::string program, std::string description);
+  Cli(int argc, char *argv[], const std::string &program, const std::string &description);
   cxxopts::ParseResult parse();
   std::string help();
 };

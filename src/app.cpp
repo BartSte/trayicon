@@ -53,7 +53,7 @@ App::App(int &argc, char **argv)
       cli(argc, argv, App::name, App::description),
       gui(),
       menu(),
-      process(std::make_unique<QProcess>()) {
+      process() {
   setApplicationDisplayName(QString::fromStdString(App::name));
   setApplicationName(QString::fromStdString(App::name));
   setApplicationVersion(PROJECT_VERSION);
@@ -79,12 +79,12 @@ void App::connect_signals() {
   };
 
   connect(this, &QApplication::aboutToQuit, log_quit);
-  connect(process.get(), &QProcess::errorOccurred, log_error);
-  connect(process.get(), &QProcess::started, log_started);
-  connect(process.get(), &QProcess::finished, log_finished);
+  connect(&process, &QProcess::errorOccurred, log_error);
+  connect(&process, &QProcess::started, log_started);
+  connect(&process, &QProcess::finished, log_finished);
 
-  connect(process.get(), &QProcess::errorOccurred, this, QApplication::quit);
-  connect(process.get(), &QProcess::finished, this, QApplication::quit);
+  connect(&process, &QProcess::errorOccurred, this, QApplication::quit);
+  connect(&process, &QProcess::finished, this, QApplication::quit);
 }
 
 /**
@@ -118,7 +118,7 @@ int App::execute() {
  *
  * @param log_level The log level to set
  */
-void App::set_logger(std::string log_level) {
+void App::set_logger(const std::string &log_level) {
   spdlog::level::level_enum level = spdlog::level::from_str(log_level);
   spdlog::set_level(level);
 }
@@ -128,22 +128,11 @@ void App::set_logger(std::string log_level) {
  *
  * @param opts The parsed options
  */
-void App::check_command(cxxopts::ParseResult opts) {
+void App::check_command(const cxxopts::ParseResult &opts) {
   if (opts.count("program")) {
     spdlog::info("Command to run: {}", opts["program"].as<std::string>());
   } else {
     throw TrayIconException("No command provided");
-  }
-}
-
-/**
- * @brief Checks if the system tray is available.
- */
-void App::check_tray_available() {
-  if (QSystemTrayIcon::isSystemTrayAvailable()) {
-    spdlog::info("System tray available");
-  } else {
-    spdlog::warn("System tray not available");
   }
 }
 
@@ -159,7 +148,12 @@ void App::print_version() {
   std::cout << "trayicon version: " << PROJECT_VERSION << std::endl;
 }
 
-void App::show_gui(cxxopts::ParseResult opts) {
+void App::show_gui(const cxxopts::ParseResult &opts) {
+  if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+    spdlog::error("System tray not available. Not showing GUI.");
+    return;
+  }
+
   menu.addAction("Quit", QApplication::quit);
   gui.setContextMenu(&menu);
 
@@ -178,40 +172,40 @@ void App::show_gui(cxxopts::ParseResult opts) {
  *
  * @param command
  */
-bool App::start_process(std::string program_, std::vector<std::string> args_) {
+bool App::start_process(const std::string &program_,
+                        const std::vector<std::string> &args_) {
   QString program = QString::fromStdString(program_);
   QStringList args;
   for (auto &arg : args_) {
     args << QString::fromStdString(arg);
   }
 
-  process->setProgram(program);
-  process->setArguments(args);
+  process.setProgram(program);
+  process.setArguments(args);
   spdlog::debug("Starting following command: {}{}",
-                process->program().toStdString(),
-                process->arguments().join(" ").toStdString());
-  process->start();
-  return process->waitForStarted();
+                process.program().toStdString(),
+                process.arguments().join(" ").toStdString());
+  process.start();
+  return process.waitForStarted();
   ;
 }
 
 bool App::stop_process() {
-  if (process->state() == QProcess::NotRunning) {
+  if (process.state() == QProcess::NotRunning) {
     return true;
   }
-  process->kill();
-  return process->waitForFinished();
+  process.kill();
+  return process.waitForFinished();
 }
 
-int App::run_command(cxxopts::ParseResult opts) {
+int App::run_command(const cxxopts::ParseResult &opts) {
   check_command(opts);
-  check_tray_available();
 
   int exit_code = 0;
   bool has_started = start_process(opts["program"].as<std::string>(),
                                    opts["args"].as<std::vector<std::string>>());
   if (!has_started) {
-    spdlog::error("Process failed to start: {}", err2str(process->error()));
+    spdlog::error("Process failed to start: {}", err2str(process.error()));
     return 1;
   }
 
@@ -219,7 +213,7 @@ int App::run_command(cxxopts::ParseResult opts) {
   exit_code = QApplication::exec();
 
   if (!stop_process()) {
-    spdlog::error("Process failed to finish: {}.", err2str(process->error()));
+    spdlog::error("Process failed to finish: {}.", err2str(process.error()));
     return 1;
   }
 
