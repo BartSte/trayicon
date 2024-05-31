@@ -17,12 +17,10 @@ target_include_directories(
 if(WIN32)
   message(STATUS "Building for Windows")
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
-elseif(LINUX)
+else()
   message(STATUS "Building for Linux")
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets Qt6::QWaylandIntegrationPlugin
                 Qt6::QXcbIntegrationPlugin)
-elseif(APPLE)
-  error("Building for MacOS is not supported yet")
 endif()
 
 target_link_libraries(trayiconapp PUBLIC ${LINK_LIBS})

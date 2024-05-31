@@ -1,0 +1,17 @@
+#!/bin/env bash
+
+source=${BASH_SOURCE[0]}
+# resolve $source until the file is no longer a symlink
+while [ -L "$source" ]; do
+    this_dir=$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)
+    source=$(readlink "$source")
+
+    # if $source was a relative symlink, we need to resolve it relative to
+    # the path where the symlink file was located
+    [[ $source != /* ]] && source=$this_dir/$source
+done
+this_dir=$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)
+
+LD_LIBRARY_PATH="$this_dir/runtime"
+export LD_LIBRARY_PATH
+"$this_dir/runtime/trayicon_bin" "$@"
