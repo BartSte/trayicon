@@ -1,7 +1,9 @@
 .cache
 build
+static-build
 Session.vim
 include/version.h
 Qt
 config.*
 qt-installer.run
+*.exe

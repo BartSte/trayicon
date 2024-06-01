@@ -49,11 +49,12 @@ function Configure() {
     Write-Output "Source $Source"
     Write-Output "Build $Build"
     Write-Output "QtDir: $QtDir"
-    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" $CMakeArgs 
+    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake;$Root\3rdparty\Qt\lib\cmake" $CMakeArgs 
 }
 
 if ($Clean) {
     Clean
 }
 
+$Root = Join-Path $PSScriptRoot ".."
 Configure
