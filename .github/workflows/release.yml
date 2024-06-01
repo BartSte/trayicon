@@ -29,3 +29,27 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           files: ./build/*.tar.gz
+
+  build-windows-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        env: 
+          QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+        run: |
+          ./scripts/setup.ps1 --static
+
+      - name: Build project
+        run: |
+          ./scripts/configure.ps1
+          cmake --build ./build --target package
+
+      - name: Publish
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: ./build/*.zip
