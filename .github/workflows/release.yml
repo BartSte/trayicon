@@ -46,7 +46,7 @@ jobs:
       - name: Build project
         run: |
           ./scripts/configure.ps1
-          cmake --build ./build --target package
+          cmake --build ./build --target package --config release
 
       - name: Publish
         uses: "marvinpinto/action-automatic-releases@latest"
