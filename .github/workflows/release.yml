@@ -40,16 +40,17 @@ jobs:
       - name: Install dependencies
         env: 
           QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+          VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
         run: |
-          ./scripts/setup.ps1 --static
+          .\scripts\setup.ps1 --static
 
       - name: Build project
         run: |
-          ./scripts/configure.ps1
+          .\scripts\configure.ps1
           cmake --build ./build --target package --config Release
 
       - name: Publish
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          files: ./build/*.zip
+          files: .\build\app\Release\*.exe

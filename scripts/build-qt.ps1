@@ -45,7 +45,11 @@ function Build-Qt-Static() {
     Write-Host "Deleting old build directory at $src\build if it exists"
     Remove-Item -Recurse -Force "$src\build" -ErrorAction SilentlyContinue
 
-    & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
+    if ($env:VSINSTALLDIR) {
+        Write-Host "Running Launch-VsDevShell.ps1"
+        & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1"
+    }
+
     & "$src\configure.bat" -static -release -prefix $Install -submodules qtbase -- -S "$src" -B "$src\build" -Wdev
     cmake --build "$src\build" --config Release
     cmake --install "$src\build"

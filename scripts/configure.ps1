@@ -30,10 +30,10 @@ All arguments after `--` are passed to cmake.
 
 #>
 param(
-    [string]$QtDir = "C:\Qt\6.7.1\msvc2019_64",
     [switch]$Clean,
     [string]$Source = $(Join-Path $PSScriptRoot ".."),
     [string]$Build = $(Join-Path  $PSScriptRoot ".." "build"),
+    [string]$QtDir = $(Join-Path $PSScriptRoot ".." "3rdparty" "Qt"),
     [string[]]$CMakeArgs = @()
 )
 
@@ -49,12 +49,20 @@ function Configure() {
     Write-Output "Source $Source"
     Write-Output "Build $Build"
     Write-Output "QtDir: $QtDir"
-    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake;$Root\3rdparty\Qt\lib\cmake" $CMakeArgs 
+    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" $CMakeArgs 
 }
+
+$Root = Join-Path $PSScriptRoot ".."
 
 if ($Clean) {
     Clean
 }
 
-$Root = Join-Path $PSScriptRoot ".."
+if ($env:VSINSTALLDIR) {
+    Write-Host "Running Launch-VsDevShell.ps1"
+    & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
+} else {
+    Write-Host "Not running Launch-VsDevShell because VSINSTALLDIR is not set."
+}
+
 Configure

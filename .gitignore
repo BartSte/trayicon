@@ -7,3 +7,4 @@ Qt
 config.*
 qt-installer.run
 *.exe
+PowerShellEditorServices.*

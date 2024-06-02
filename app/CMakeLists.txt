@@ -8,12 +8,11 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/cmake/Install.cmake)
 
+# TODO: I have the issue that the default icon can not be found...
 add_executable(${bin} main.cpp ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
 target_link_libraries(${bin} PRIVATE trayiconapp)
 
-if(WIN32)
-  message(STATUS "No windows specific install steps")
-else()
+if(UNIX AND NOT APPLE)
   install(PROGRAMS ${INSTALL_SCRIPTS}/${PROJECT_NAME} DESTINATION .)
   install_with_runtime_dependencies(${bin})
 endif()

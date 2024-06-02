@@ -28,7 +28,9 @@ configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in
 add_subdirectory(src)
 add_subdirectory(app)
 
-set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION_FULL})
-set(CPACK_GENERATOR "TGZ")
-include(CPack)
+if(UNIX AND NOT APPLE)
+  set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+  set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION_FULL})
+  set(CPACK_GENERATOR "TGZ")
+  include(CPack)
+endif()
