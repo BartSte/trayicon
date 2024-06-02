@@ -1,3 +1,5 @@
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
 if(WIN32)
   # For the binary is called directly hence we call it trayicon.
   set(bin "trayicon")
