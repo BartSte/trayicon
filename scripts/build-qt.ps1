@@ -17,6 +17,9 @@ Install static Qt libraries (default).
 .PARAMETER Shared
 Install shared Qt libraries.
 
+.PARAMETER Arch
+The architecture of the build: x86 or amd64. Default is amd64.
+
 .PARAMETER Version
 The version of Qt to install.
 #>
@@ -25,6 +28,7 @@ param (
     [string]$Install=$(Join-Path $PSScriptRoot ".." "3rdparty" "Qt"),
     [switch]$Static,
     [switch]$Shared,
+    [string]$Arch="amd64",
     [string]$Version="6.7.1"
 )
 
@@ -47,7 +51,7 @@ function Build-Qt-Static() {
 
     if ($env:VSINSTALLDIR) {
         Write-Host "Running Launch-VsDevShell.ps1"
-        & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1"
+        & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1" -Arch $Arch
     }
 
     & "$src\configure.bat" -static -release -prefix $Install -submodules qtbase -- -S "$src" -B "$src\build" -Wdev

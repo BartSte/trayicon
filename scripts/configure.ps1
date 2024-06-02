@@ -25,6 +25,9 @@ The path to the source code. Default is root of project.
 The directory to store the build files in. Default is "build" for in root of
 the project.
 
+.PARAMETER Arch
+The architecture of the build: x86 or amd64. Default is amd64.
+
 .PARAMETER CMakeArgs
 All arguments after `--` are passed to cmake.
 
@@ -34,6 +37,7 @@ param(
     [string]$Source = $(Join-Path $PSScriptRoot ".."),
     [string]$Build = $(Join-Path  $PSScriptRoot ".." "build"),
     [string]$QtDir = $(Join-Path $PSScriptRoot ".." "3rdparty" "Qt"),
+    [string]$Arch="amd64",
     [string[]]$CMakeArgs = @()
 )
 
@@ -41,6 +45,15 @@ function Clean() {
     if (Test-Path $Build) {
         Write-Output "Removing build directory"
         Remove-Item $Build -Recurse -Force
+    }
+}
+
+function  Launch-VsDevShell() {
+    if ($env:VSINSTALLDIR) {
+        Write-Host "Running Launch-VsDevShell.ps1"
+        & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1" -Arch $Arch
+    } else {
+        Write-Host "Not running Launch-VsDevShell because VSINSTALLDIR is not set."
     }
 }
 
@@ -58,11 +71,5 @@ if ($Clean) {
     Clean
 }
 
-if ($env:VSINSTALLDIR) {
-    Write-Host "Running Launch-VsDevShell.ps1"
-    & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
-} else {
-    Write-Host "Not running Launch-VsDevShell because VSINSTALLDIR is not set."
-}
-
+Launch-VsDevShell
 Configure
