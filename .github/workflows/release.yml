@@ -9,13 +9,14 @@ jobs:
   build-release:
     runs-on: ubuntu-22.04
 
+    env: 
+      QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        env: 
-          QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
         run: |
           ./scripts/setup --static
 
@@ -33,16 +34,16 @@ jobs:
   build-windows-release:
     runs-on: windows-latest
 
+    env: 
+      QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+      VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        env: 
-          QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
-          VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
-        run: |
-          .\scripts\setup.ps1 --static
+        run: .\scripts\setup.ps1 --static
 
       - name: Build project
         run: |
