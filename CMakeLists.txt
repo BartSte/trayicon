@@ -22,10 +22,6 @@ if(UNIX AND NOT APPLE)
       CACHE PATH "Install scripts")
   set(CMAKE_INSTALL_PREFIX /opt/${PROJECT_NAME})
   message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
-  set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-  set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION_FULL})
-  set(CPACK_GENERATOR "TGZ")
-  include(CPack)
 
 elseif(WIN32)
   set(CMAKE_INSTALL_PREFIX "C:/Program Files/${PROJECT_NAME}")
@@ -37,3 +33,10 @@ configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in
 
 add_subdirectory(src)
 add_subdirectory(app)
+
+if(UNIX AND NOT APPLE)
+  set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+  set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION_FULL})
+  set(CPACK_GENERATOR "TGZ")
+  include(CPack)
+endif()

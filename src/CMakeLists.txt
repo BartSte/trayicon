@@ -17,11 +17,12 @@ add_library(trayiconapp ${SOURCES} ${INCLUDES})
 target_include_directories(
   trayiconapp
   PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/include
-  INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/snapshot_autogen/include)
+  INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/trayiconapp_autogen/include)
 
 if(WIN32)
   message(STATUS "Building for Windows")
   set(LINK_LIBS spdlog cxxopts Qt6::Widgets)
+
 elseif(Unix AND NOT APPLE)
   message(STATUS "Building for Linux")
   if (QT6_LIB_TYPE STREQUAL "STATIC_LIBRARY")
