@@ -9,7 +9,7 @@ jobs:
   build-release:
     runs-on: ubuntu-22.04
 
-    env: 
+    env:
       QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
 
     steps:
@@ -34,7 +34,7 @@ jobs:
   build-windows-release:
     runs-on: windows-latest
 
-    env: 
+    env:
       QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
       VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
 
@@ -43,10 +43,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: .\scripts\setup.ps1 --static
+        run: |
+          .\scripts\launch_dev_shell.ps1
+          .\scripts\setup.ps1 --static
 
       - name: Build project
         run: |
+          .\scripts\launch_dev_shell.ps1
           .\scripts\configure.ps1
           cmake --build ./build --target package --config Release
 

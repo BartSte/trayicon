@@ -37,6 +37,7 @@ param(
     [string]$Source = $(Join-Path $PSScriptRoot ".."),
     [string]$Build = $(Join-Path  $PSScriptRoot ".." "build"),
     [string]$QtDir = $(Join-Path $PSScriptRoot ".." "3rdparty" "Qt"),
+    [string]$BuildType = "Release"
     [string]$Arch="amd64",
     [string[]]$CMakeArgs = @()
 )
@@ -48,24 +49,13 @@ function Clean() {
     }
 }
 
-function  Launch-VsDevShell() {
-    if ($env:VSINSTALLDIR) {
-        Write-Host "Running Launch-VsDevShell.ps1"
-        & "$env:VSINSTALLDIR\Common7\Tools\Launch-VsDevShell.ps1" -Arch $Arch
-    } else {
-        Write-Host "Not running Launch-VsDevShell because VSINSTALLDIR is not set."
-    }
-}
-
 function Configure() {
     Write-Output "Configuring build..."
     Write-Output "Source $Source"
     Write-Output "Build $Build"
     Write-Output "QtDir: $QtDir"
-    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" $CMakeArgs 
+    cmake -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" -DCMAKE_BUILD_TYPE="$BuildType" $CMakeArgs 
 }
-
-$Root = Join-Path $PSScriptRoot ".."
 
 if ($Clean) {
     Clean
