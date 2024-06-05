@@ -57,5 +57,4 @@ if ($Clean) {
     Clean
 }
 
-Launch-VsDevShell
 Configure
