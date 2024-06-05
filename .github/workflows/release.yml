@@ -72,13 +72,16 @@ jobs:
 
     env:
       QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
-      VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
       QT_VERSION: 6.7.1
-      CXX: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.39.33519/bin/Hostx64/x64/cl.exe
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Make qt-version.txt
         run: echo $QT_VERSION > qt-version.txt
@@ -94,12 +97,10 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          .\scripts\launch_dev_shell.ps1
           .\scripts\setup.ps1 --static
 
       - name: Build project
         run: |
-          .\scripts\launch_dev_shell.ps1
           .\scripts\configure.ps1
           cmake --build ./build --target package --config Release
 
