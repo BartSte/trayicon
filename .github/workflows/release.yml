@@ -2,16 +2,32 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v[0-9]+\.[0-9]+\.[0-9]+'
+    branches:
+      - main
 
 jobs:
+  check-tag:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if tag exists
+        run: |
+          git fetch --tags
+          if git rev-parse v${{ env.VERSION }} >/dev/null 2>&1; then
+            echo "Tag v${{ env.VERSION }} already exists"
+            exit 1
+          fi
+
   build-release:
+    needs: check-tag
     runs-on: ubuntu-22.04
 
     env:
       QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
       QT_VERSION: 6.7.1
+      VERSION: 0.0.0
 
     steps:
       - name: Checkout code
@@ -24,9 +40,10 @@ jobs:
         id: cache-qt
         uses: actions/cache@v3
         with:
-          path: ./3rdparty/Qt
+          path: $PWD/3rdparty/Qt
           key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
-          restore-keys: ${{ runner.os }}-qt-
+          restore-keys: |
+            ${{ runner.os }}-qt-
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
@@ -50,6 +67,7 @@ jobs:
           files: ./build/*.tar.gz
 
   build-windows-release:
+    needs: check-tag
     runs-on: windows-latest
 
     env:
@@ -90,3 +108,12 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           files: .\build\app\Release\*.exe
+
+  push-tag:
+    needs: [check-tag, build-release, build-windows-release]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Push tag
+        run: |
+          git tag -a v${{ env.VERSION }} -m "Release v${{ env.VERSION }}"
+          git push origin v${{ env.VERSION }}
