@@ -11,24 +11,32 @@ jobs:
 
     env:
       QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+      QT_VERSION: 6.7.1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up cache
-        id: cache
+      - name: Make qt-version.txt
+        run: echo $QT_VERSION > qt-version.txt
+
+      - name: Set up cache qt static
+        id: cache-qt
         uses: actions/cache@v3
         with:
           path: ./3rdparty/Qt
-          key: ${{ runner.os }}-dependency-${{ hashFiles('./3rdparty/Qt') }}
-          restore-keys: |
-            ${{ runner.os }}-dependency-
+          key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
+          restore-keys: ${{ runner.os }}-qt-
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/setup --static
+
+      - name: Install dependencies with cached Qt
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          ./scripts/setup --no-qt
 
       - name: Build project
         run: |
@@ -52,14 +60,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up cache
-        id: cache
+      - name: Make qt-version.txt
+        run: echo $QT_VERSION > qt-version.txt
+
+      - name: Set up cache qt static
+        id: cache-qt
         uses: actions/cache@v3
         with:
           path: ./3rdparty/Qt
-          key: ${{ runner.os }}-dependency-${{ hashFiles('./3rdparty/Qt') }}
-          restore-keys: |
-            ${{ runner.os }}-dependency-
+          key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
+          restore-keys: ${{ runner.os }}-qt-
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'

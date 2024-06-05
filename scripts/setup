@@ -37,6 +37,12 @@ while [[ $# -gt 0 ]]; do
             static=true
             shift
             ;;
+        --no-qt)
+            echo "No Qt libraries will be installed"
+            shared=false
+            static=false
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             echo "$usage"

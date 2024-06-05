@@ -8,6 +8,7 @@ shared=false
 use_pch=-no-pch
 source_dir="$root/Qt"
 install_dir="$root/3rdparty/Qt"
+version=6.7.1
 usage="Usage: build-qt [--static] [--shared]
 
 Build Qt with static or shared linking.
@@ -38,6 +39,11 @@ while [[ $# -gt 0 ]]; do
         --use-pch)
             echo "Qt will be built with precompiled headers"
             use_pch=-pch
+            shift
+            ;;
+        --version)
+            version="$2"
+            shift
             shift
             ;;
         -s | --source-dir)
@@ -81,7 +87,7 @@ build-qt-static() {
 
     export CC=gcc
     export CXX=g++
-    src="$source_dir/6.7.1/Src"
+    src="$source_dir/$version/Src"
     "$src/configure" \
         -static \
         -release \
@@ -104,7 +110,7 @@ download-qt-shared() {
     mkdir "$source_dir"
     mkdir "$install_dir"
     "$root/scripts/download-qt" --root "$source_dir" qt.qt6.671.gcc_64
-    cp "${source_dir}"/6.7.1/gcc_64/** "$install_dir" -r
+    cp "${source_dir}"/"${version}"/gcc_64/** "$install_dir" -r
 }
 
 if [[ "$static" = true ]]; then
