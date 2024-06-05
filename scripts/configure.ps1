@@ -25,9 +25,6 @@ The path to the source code. Default is root of project.
 The directory to store the build files in. Default is "build" for in root of
 the project.
 
-.PARAMETER Arch
-The architecture of the build: x86 or amd64. Default is amd64.
-
 .PARAMETER CMakeArgs
 All arguments after `--` are passed to cmake.
 
@@ -37,8 +34,7 @@ param(
     [string]$Source = $(Join-Path $PSScriptRoot ".."),
     [string]$Build = $(Join-Path  $PSScriptRoot ".." "build"),
     [string]$QtDir = $(Join-Path $PSScriptRoot ".." "3rdparty" "Qt"),
-    [string]$BuildType = "Release"
-    [string]$Arch="amd64",
+    [string]$BuildType = "Release",
     [string[]]$CMakeArgs = @()
 )
 
