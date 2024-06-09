@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+env:
+  QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
+  QT_VERSION: 6.7.1
+  VERSION: 0.0.0
+
 jobs:
   check-tag:
     runs-on: ubuntu-22.04
@@ -23,11 +28,6 @@ jobs:
   build-release:
     needs: check-tag
     runs-on: ubuntu-22.04
-
-    env:
-      QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
-      QT_VERSION: 6.7.1
-      VERSION: 0.0.0
 
     steps:
       - name: Checkout code
@@ -62,20 +62,15 @@ jobs:
           ./scripts/configure
           cmake --build ./build --target package
 
-      - name: Publish
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-linux"
+          name: linux-tarball
           files: ./build/*.tar.gz
 
   build-windows-release:
     needs: check-tag
     runs-on: windows-latest
-
-    env:
-      QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
-      QT_VERSION: 6.7.1
 
     steps:
       - name: Checkout code
@@ -109,19 +104,61 @@ jobs:
           .\scripts\configure.ps1
           cmake --build ./build --config Release
 
-      - name: Publish
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-windows"
-          files: .\build\app\Release\*.exe
+          name: windows-standalone-exe
+          files: .\build\app\*.exe
 
-  push-tag:
+  make-release:
     needs: [check-tag, build-release, build-windows-release]
     runs-on: ubuntu-22.04
+
     steps:
+      - name: Download artifacts linux
+        uses: actions/download-artifact@v3
+        with:
+          name: linux-tarball
+          path: .
+
+      - name: Download artifacts windows
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-standalone-exe
+          path: .
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Linux artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./*.tar.gz
+          asset_name: trayicon-${{ env.VERSION }}-linux-x64.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./*.exe
+          asset_name: trayicon-${{ env.VERSION }}-windows-x64.exe
+          asset_content_type: application/octet-stream
+
       - name: Push tag
         run: |
           git tag -a v${{ env.VERSION }} -m "Release v${{ env.VERSION }}"
           git push origin v${{ env.VERSION }}
-    # push the files of both releases jobs to the release
