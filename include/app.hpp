@@ -16,6 +16,7 @@ class App : public QApplication {
  private:
   Q_OBJECT;
 
+  int pid;
   Cli cli;
   QSystemTrayIcon gui;
   QMenu menu;
@@ -33,7 +34,7 @@ class App : public QApplication {
   void show_gui(const cxxopts::ParseResult &opts);
   bool start_process(const std::string &program_,
                      const std::vector<std::string> &args_);
-  bool stop_process();
+  void stop_process();
   int run_command(const cxxopts::ParseResult &opts);
 
  public:

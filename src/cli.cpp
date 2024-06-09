@@ -27,10 +27,7 @@ Cli::Cli(int argc, char *argv[], const std::string &program,
     ("l,loglevel", "Set the loglevel to CRITICAL, ERROR, WARNING, INFO, or DEBUG", 
       DEFAULT("warning"))
 
-    ("program", "The program to run.", 
-     cxxopts::value<std::string>())
-
-    ("args", "The arguments to pass to the command.", 
+    ("command", "The command to run.", 
      cxxopts::value<std::vector<std::string>>()->default_value({}));
   // clang-format on
 

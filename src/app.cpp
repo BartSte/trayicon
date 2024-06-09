@@ -33,7 +33,7 @@ std::string err2str(QProcess::ProcessError error) {
   case QProcess::UnknownError:
     return "Unknown error";
   default:
-    return "Unknown error";
+    return "Unknown error code from QProcess";
   }
 }
 
@@ -50,6 +50,7 @@ std::string App::description =
  */
 App::App(int &argc, char **argv)
     : QApplication(argc, argv),
+      pid(0),
       cli(argc, argv, App::name, App::description),
       gui(),
       menu(),
@@ -69,7 +70,8 @@ void App::connect_signals() {
   auto log_started = [&]() { spdlog::info("Process started"); };
   auto log_finished = [&](int exit_code) {
     spdlog::info("Process finished");
-    spdlog::debug("Process finished with code: {}", exit_code);
+    spdlog::debug("Process exit code: {}", process.exitCode());
+    spdlog::debug("Process error: {}", err2str(process.error()));
   };
   auto log_quit = [&]() { spdlog::info("Quitting application"); };
   auto log_error = [&](QProcess::ProcessError error) {
@@ -83,6 +85,7 @@ void App::connect_signals() {
   connect(&process, &QProcess::started, log_started);
   connect(&process, &QProcess::finished, log_finished);
 
+  connect(this, &QApplication::aboutToQuit, [&]() { stop_process(); });
   connect(&process, &QProcess::errorOccurred, this, QApplication::quit);
   connect(&process, &QProcess::finished, this, QApplication::quit);
 }
@@ -161,7 +164,7 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
   spdlog::debug("Icon path: {}", icon_path);
   gui.setIcon(QIcon(QString::fromStdString(icon_path)));
 
-  std::string command = opts["program"].as<std::string>();
+  std::vector<std::string> command = opts["command"].as<std::string>();
   gui.setToolTip(QString::fromStdString(command));
 
   gui.show();
@@ -179,43 +182,38 @@ bool App::start_process(const std::string &program_,
   for (auto &arg : args_) {
     args << QString::fromStdString(arg);
   }
+  process.setProcessChannelMode(QProcess::ForwardedChannels);
+  process.startCommand(
+      "C:\\Users\\BartSteensma\\Desktop\\trayicon\\kmonad "
+      "C:\\Users\\BartSteensma\\Desktop\\trayicon\\home_row_modifiers.kbd");
 
-  process.setProgram(program);
-  process.setArguments(args);
-  spdlog::debug("Starting following command: {}{}",
-                process.program().toStdString(),
-                process.arguments().join(" ").toStdString());
-  process.start();
-  return process.waitForStarted();
-  ;
+  bool result = process.waitForStarted();
+  if (result) {
+    pid = process.processId();
+    spdlog::debug("Process started with PID: {}", pid);
+  }
+  return result;
 }
 
-bool App::stop_process() {
-  if (process.state() == QProcess::NotRunning) {
-    return true;
-  }
+void App::stop_process() {
   process.kill();
-  return process.waitForFinished();
+  if (process.state() == QProcess::Running) {
+    if (!process.waitForFinished()) {
+      spdlog::error("Process failed to finish: {}", err2str(process.error()));
+    }
+  }
 }
 
 int App::run_command(const cxxopts::ParseResult &opts) {
   check_command(opts);
 
-  int exit_code = 0;
   bool has_started = start_process(opts["program"].as<std::string>(),
                                    opts["args"].as<std::vector<std::string>>());
   if (!has_started) {
     spdlog::error("Process failed to start: {}", err2str(process.error()));
     return 1;
+  } else {
+    spdlog::debug("Process started, starting event loop");
+    return QApplication::exec();
   }
-
-  spdlog::debug("Process started, starting event loop");
-  exit_code = QApplication::exec();
-
-  if (!stop_process()) {
-    spdlog::error("Process failed to finish: {}.", err2str(process.error()));
-    return 1;
-  }
-
-  return exit_code;
 }

@@ -50,7 +50,7 @@ function Configure() {
     Write-Output "Source $Source"
     Write-Output "Build $Build"
     Write-Output "QtDir: $QtDir"
-    cmake -G "Visual Studio 17 2022" -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" -DCMAKE_BUILD_TYPE="$BuildType" $CMakeArgs 
+    cmake -G "Ninja" -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" -DCMAKE_BUILD_TYPE="$BuildType" $CMakeArgs 
 }
 
 if ($Clean) {

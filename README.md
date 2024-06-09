@@ -21,3 +21,9 @@ restart or quit the application.
 ##### MinGW
 
 - Use windeployqt add all libs etc.
+
+## TODO:
+
+- [ ] the program + args split is not working. Move to 1 command on the cli and
+  pass it to QProcess::startCommand.
+- [ ] windows pipeline fails. Maybee use ninja + msvc? Is this possible?
