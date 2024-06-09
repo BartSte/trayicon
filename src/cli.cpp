@@ -31,7 +31,7 @@ Cli::Cli(int argc, char *argv[], const std::string &program,
      cxxopts::value<std::vector<std::string>>()->default_value({}));
   // clang-format on
 
-  options.parse_positional("program", "args");
+  options.parse_positional("command");
 }
 
 /**
@@ -47,3 +47,17 @@ cxxopts::ParseResult Cli::parse() { return options.parse(argc, argv); }
  * @return the help message
  */
 std::string Cli::help() { return options.help(); }
+
+/**
+ * @brief Join a vector of strings into a single string.
+ *
+ * @param args the vector of strings
+ * @return the joined string
+ */
+std::string Cli::join_args(const std::vector<std::string> &args) {
+  std::string result;
+  for (const auto &arg : args) {
+    result += arg + " ";
+  }
+  return result;
+}
