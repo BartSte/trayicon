@@ -24,5 +24,7 @@ int main(int argc, char *argv[]) {
   } catch (...) {
     spdlog::critical("Unknown exception occurred");
   }
+
+  spdlog::info("Exiting with code {}", exit_code);
   return exit_code;
 }

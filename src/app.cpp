@@ -50,7 +50,6 @@ std::string App::description =
  */
 App::App(int &argc, char **argv)
     : QApplication(argc, argv),
-      pid(0),
       cli(argc, argv, App::name, App::description),
       gui(),
       menu(),
@@ -67,13 +66,13 @@ App::App(int &argc, char **argv)
  * versa, such that they both quit when the other quits.
  */
 void App::connect_signals() {
-  auto log_started = [&]() { spdlog::info("Process started"); };
+  auto log_started = [&]() { spdlog::debug("Process started"); };
   auto log_finished = [&](int exit_code) {
-    spdlog::info("Process finished");
+    spdlog::debug("Process finished");
     spdlog::debug("Process exit code: {}", process.exitCode());
     spdlog::debug("Process error: {}", err2str(process.error()));
   };
-  auto log_quit = [&]() { spdlog::info("Quitting application"); };
+  auto log_quit = [&]() { spdlog::debug("QApplication about to quit."); };
   auto log_error = [&](QProcess::ProcessError error) {
     spdlog::debug("Process error occurred that is expected since processes are "
                   "killed instead of terminated. Error: {}",
@@ -127,20 +126,6 @@ void App::set_logger(const std::string &log_level) {
 }
 
 /**
- * @brief The command on its validity.
- *
- * @param opts The parsed options
- */
-void App::check_command(const cxxopts::ParseResult &opts) {
-  if (opts.count("command")) {
-    auto command = opts["command"].as<std::vector<std::string>>();
-    spdlog::info("Full command: {}", Cli::join_args(command));
-  } else {
-    throw TrayIconException("No command provided");
-  }
-}
-
-/**
  * @brief Prints the help message to the standard output.
  */
 void App::print_help() { std::cout << cli.help() << std::endl; }
@@ -165,7 +150,7 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
   spdlog::debug("Icon path: {}", icon_path);
   gui.setIcon(QIcon(QString::fromStdString(icon_path)));
 
-  auto program = opts["command"].as<std::vector<std::string>>()[0];
+  auto program = opts["command"].as<std::string>();
   gui.setToolTip(QString::fromStdString(program));
 
   gui.show();
@@ -176,37 +161,27 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
  *
  * @param command
  */
-bool App::start_process(const std::vector<std::string> &command) {
-  std::string joined_command = Cli::join_args(command);
-  spdlog::info("Running command: {}", joined_command);
+bool App::start_process(const std::string &command) {
+  spdlog::info("Running command: {}", command);
 
   process.setProcessChannelMode(QProcess::ForwardedChannels);
-  process.start(QString::fromStdString(joined_command));
-  bool result = process.waitForStarted();
-
-  if (result) {
-    pid = process.processId();
-    spdlog::debug("Process started with PID: {}", pid);
-  }
-
-  return result;
+  process.startCommand(QString::fromStdString(command));
+  return process.waitForStarted();
 }
 
-void App::stop_process() {
+bool App::stop_process() {
   process.kill();
+
   if (process.state() == QProcess::Running) {
-    if (!process.waitForFinished()) {
-      spdlog::error("Process failed to finish: {}", err2str(process.error()));
-    }
+    return process.waitForFinished();
+  } else {
+    return true;
   }
 }
 
 int App::run_command(const cxxopts::ParseResult &opts) {
-  check_command(opts);
-
-  auto command = opts["command"].as<std::vector<std::string>>();
-  if (start_process(command)) {
-    spdlog::debug("Process started, starting event loop");
+  if (start_process(opts["command"].as<std::string>())) {
+    spdlog::debug("Starting event loop");
     return QApplication::exec();
 
   } else {
