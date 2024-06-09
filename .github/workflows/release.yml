@@ -34,19 +34,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Make qt-version.txt
-        run: echo $QT_VERSION > qt-version.txt
+        run: |
+          echo $QT_VERSION > qt-version.txt
+          mkdir -p 3rdparty/Qt
 
       - name: Set up cache qt static
         id: cache-qt
         uses: actions/cache@v3
         with:
-          path: $PWD/3rdparty/Qt
+          path: 3rdparty/Qt
           key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
           restore-keys: |
             ${{ runner.os }}-qt-
 
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+      - if: ${{ steps.cache-qt.outputs.cache-hit != 'true' }}
+        name: Install dependencies
         run: |
           ./scripts/setup --static
 
@@ -85,18 +87,20 @@ jobs:
           arch: x64
 
       - name: Make qt-version.txt
-        run: echo $QT_VERSION > qt-version.txt
+        run: |
+          echo $QT_VERSION > qt-version.txt
+          mkdir -p 3rdparty/Qt
 
       - name: Set up cache qt static
-        id: cache-qt
+        id: cache-qt-window
         uses: actions/cache@v3
         with:
-          path: ./3rdparty/Qt
+          path: 3rdparty/Qt
           key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
           restore-keys: ${{ runner.os }}-qt-
 
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+      - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
+        name: Install dependencies
         run: |
           .\scripts\setup.ps1 --static
 
@@ -120,3 +124,4 @@ jobs:
         run: |
           git tag -a v${{ env.VERSION }} -m "Release v${{ env.VERSION }}"
           git push origin v${{ env.VERSION }}
+    # push the files of both releases jobs to the release
