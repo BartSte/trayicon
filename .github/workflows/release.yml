@@ -8,27 +8,37 @@ on:
 env:
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
-  VERSION: 0.0.0
 
 jobs:
+  # Check if the latest tag is in format v*.*.* and does not yet have a release associated with it. If so, continue with the build.
   check-tag:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check if tag exists
+      - name: Check tag
         run: |
-          git fetch --tags
-          if git rev-parse v${{ env.VERSION }} >/dev/null 2>&1; then
-            echo "Tag v${{ env.VERSION }} already exists"
-            exit 1
+          echo ::set-output name=TAG::$(git describe --tags --abbrev=0)           
+          echo "Latest tag is ${{ steps.get_tag.outputs.TAG }}"
+          if [[ ${{ steps.get_tag.outputs.TAG }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag is in correct format"
+          else
+            echo "Tag is not in correct format"
+            exit 0
+          fi
+          if [[ $(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/BartSte/trayicon/releases/tags/${{ steps.get_tag.outputs.TAG }}) -eq 404 ]]; then
+            echo "Release does not exist"
+          else
+            echo "Release already exists"
+            exit 0
           fi
 
   build-release:
     needs: check-tag
     runs-on: ubuntu-22.04
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,8 +62,8 @@ jobs:
         run: |
           ./scripts/setup --static
 
-      - name: Install dependencies with cached Qt
-        if: steps.cache.outputs.cache-hit == 'true'
+      - if: ${{ steps.cache-qt.outputs.cache-hit == 'true' }}
+        name: Install dependencies with cached Qt
         run: |
           ./scripts/setup --no-qt
 
@@ -63,15 +73,14 @@ jobs:
           cmake --build ./build --target package
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-tarball
-          files: ./build/*.tar.gz
+          path: ./build/*.tar.gz
 
   build-windows-release:
     needs: check-tag
     runs-on: windows-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -105,60 +114,32 @@ jobs:
           cmake --build ./build --config Release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-standalone-exe
-          files: .\build\app\*.exe
+          path: .\build\app\*.exe
 
   make-release:
     needs: [check-tag, build-release, build-windows-release]
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Download artifacts linux
-        uses: actions/download-artifact@v3
-        with:
-          name: linux-tarball
-          path: .
+      - name: Get latest tag as version
+        run: echo ::set-env name=VERSION::$(git describe --tags --abbrev=0)
 
-      - name: Download artifacts windows
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-standalone-exe
-          path: .
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
 
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Linux artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./*.tar.gz
-          asset_name: trayicon-${{ env.VERSION }}-linux-x64.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload Windows artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./*.exe
-          asset_name: trayicon-${{ env.VERSION }}-windows-x64.exe
-          asset_content_type: application/octet-stream
-
-      - name: Push tag
-        run: |
-          git tag -a v${{ env.VERSION }} -m "Release v${{ env.VERSION }}"
-          git push origin v${{ env.VERSION }}
+          files: |
+            linux-tarball/*.tar.gz
+            windows-standalone-exe/*.exe
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          body: |
+            Release ${{ env.VERSION }}
+            - [Changelog](https://github.com/BartSte/trayicon/CHANGELOG.md)
