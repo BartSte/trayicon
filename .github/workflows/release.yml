@@ -6,38 +6,13 @@ on:
       - main
 
 env:
+  # By setting the VERSION environment variable, the version of the release can be controlled.
+  VERSION: v0.0.0
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
 
 jobs:
-  # Check if the latest tag is in format v*.*.* and does not yet have a release associated with it. If so, continue with the build.
-  check-tag:
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check tag
-        run: |
-          echo ::set-output name=TAG::$(git describe --tags --abbrev=0)           
-          echo "Latest tag is ${{ steps.get_tag.outputs.TAG }}"
-          if [[ ${{ steps.get_tag.outputs.TAG }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag is in correct format"
-          else
-            echo "Tag is not in correct format"
-            exit 0
-          fi
-          if [[ $(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/BartSte/trayicon/releases/tags/${{ steps.get_tag.outputs.TAG }}) -eq 404 ]]; then
-            echo "Release does not exist"
-          else
-            echo "Release already exists"
-            exit 0
-          fi
-
   build-release:
-    needs: check-tag
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -79,7 +54,6 @@ jobs:
           path: ./build/*.tar.gz
 
   build-windows-release:
-    needs: check-tag
     runs-on: windows-latest
     steps:
       - name: Checkout code
@@ -120,13 +94,11 @@ jobs:
           path: .\build\app\*.exe
 
   make-release:
-    needs: [check-tag, build-release, build-windows-release]
+    needs: [build-release, build-windows-release]
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Get latest tag as version
-        run: echo ::set-env name=VERSION::$(git describe --tags --abbrev=0)
-
+      # TODO: Only build the release if no tag exists that is the same as VERSION
       - name: Download artifacts
         uses: actions/download-artifact@v4
 
