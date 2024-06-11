@@ -6,12 +6,30 @@ on:
       - main
 
 env:
-  # By setting the VERSION environment variable, the version of the release can be controlled.
+  # By setting the VERSION environment variable, the version of the release can
+  # be controlled. By pushing a tag with the same name as the VERSION, cmake
+  # can use it to set the version of the project. The release should only be
+  # created if no release with the same version exists. This can be checked by
+  # visiting the corresponding url. We always run the build-release and
+  # build-windows-release jobs, so the artifacts are always available for we
+  # can check if the build was successful. The created artifacts are only uploaded
+  # if a new release is created.
   VERSION: v0.0.0
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
 
 jobs:
+  # This job is used to push the tag to the repository. This is done before the
+  # build-release job, so the version is available for cmake. If the tag already
+  # exists, the job will be stopped, which is no problem.
+  push-tag:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Push tag
+        run: |
+          git tag -a ${{ env.VERSION }} -m "Release ${{ env.VERSION }}" || exit 0
+          git push origin ${{ env.VERSION }}
+
   build-release:
     runs-on: ubuntu-22.04
     steps:
@@ -93,12 +111,34 @@ jobs:
           name: windows-standalone-exe
           path: .\build\app\*.exe
 
+  # This job is used to check if a release with the same version already
+  # exists. If the release exists, the output exists is set to true, otherwise
+  # it is set to false.
+  check-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the release by tag
+        id: get_release
+        run: |
+          release_url=$(curl -s https://api.github.com/repos/BartSte/trayicon/releases/tags/Release%200.0.0 | jq -r '.url')
+          if [ "$release_url" == "null" ]; then
+            echo "Release not found."
+            echo "::set-output name=exists::false"
+          else
+            echo "Release found: $release_url"
+            echo "::set-output name=exists::true"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Only create a release if the check-release job has found that no release
+  # with the same version exists. The artifacts are downloaded from the build
+  # jobs and uploaded to the release.
   make-release:
     needs: [build-release, build-windows-release]
     runs-on: ubuntu-22.04
-
+    if: needs.check-release.outputs.exists == 'false'
     steps:
-      # TODO: Only build the release if no tag exists that is the same as VERSION
       - name: Download artifacts
         uses: actions/download-artifact@v4
 
