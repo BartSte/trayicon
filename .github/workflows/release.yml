@@ -82,11 +82,6 @@ jobs:
           echo $QT_VERSION > qt-version.txt
           mkdir -p 3rdparty/Qt
 
-      - name: Set up Visual Studio shell
-        uses: egor-tensin/vs-shell@v2
-        with:
-          arch: x64
-
       - name: Set up cache qt static
         id: cache-qt-window
         uses: actions/cache@v3
@@ -95,6 +90,11 @@ jobs:
           key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
           restore-keys: |
             ${{ runner.os }}-qt-
+
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
         name: Install dependencies
