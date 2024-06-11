@@ -14,7 +14,8 @@ end anyway.
 Options:
     --help      Show this help message.
     --shared    Install shared libraries. (default=false)
-    --static    Install static libraries (default=true)."
+    --static    Install static libraries (default=true).
+    --no-qt     Do not install Qt libraries."
 
 shared=false
 static=true
@@ -78,8 +79,6 @@ elif [[ "$shared" = true ]]; then
     "$root/scripts/build-qt" --shared -s "$root/Qt" -i "$root/3rdparty/Qt"
 
 else
-    echo "Unknown build type"
-    echo "$usage"
-    exit 1
+    echo "Qt libraries will not be installed"
 fi
 
