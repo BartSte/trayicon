@@ -6,16 +6,15 @@
 #   - PROJECT_VERSION_SUFFIX: The version suffix which is the commit hash if not
 #     a tagged commit, and/or '-custom' if not a GitHub Actions build.
 #   - PROJECT_VERSION_FULL: The full version string
+# If a github workflow is detected, the version is set to the environment
+# variable RELEASE_VERSION, which is set by the GitHub Actions workflow.
 # cmake-format: on
 function(set_git_tag_as_project_version)
   find_package(Git QUIET)
-  if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    # Detect if building in GitHub Actions
-    set(BUILD_ENV "local")
-    if(DEFINED ENV{GITHUB_ACTIONS})
-      set(BUILD_ENV "github")
-    endif()
+  if(DEFINED ENV{GITHUB_ACTIONS})
+    set(project_version_tag "$ENV{RELEASE_VERSION}")
 
+  elseif(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     # Attempt to get version from git describe
     execute_process(
       COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --contains --match
@@ -45,10 +44,7 @@ function(set_git_tag_as_project_version)
       set(project_version_tag "no-version")
     endif()
 
-    # Append '-custom' if not a GitHub Actions build
-    if(BUILD_ENV STREQUAL "local")
-      set(project_version_suffix "${project_commit_hash}-custom")
-    endif()
+    set(project_version_suffix "${project_commit_hash}-custom")
 
   else()
     message(

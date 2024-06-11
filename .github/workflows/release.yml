@@ -6,32 +6,35 @@ on:
       - main
 
 env:
-  # By setting the VERSION environment variable, the version of the release can
-  # be controlled. By pushing a tag with the same name as the VERSION, cmake
+  # By setting the RELEASE_VERSION environment variable, the version of the release can
+  # be controlled. By pushing a tag with the same name as the RELEASE_VERSION, cmake
   # can use it to set the version of the project. The release should only be
   # created if no release with the same version exists. This can be checked by
   # visiting the corresponding url. We always run the build-release and
   # build-windows-release jobs, so the artifacts are always available for we
-  # can check if the build was successful. The created artifacts are only uploaded
-  # if a new release is created.
-  VERSION: v0.0.0
+  # can check if the build was successful. The created artifacts are only
+  # uploaded if a new release is created.
+  RELEASE_VERSION: v0.0.0
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
 
 jobs:
-  # This job is used to push the tag to the repository. This is done before the
-  # build-release job, so the version is available for cmake. If the tag already
-  # exists, the job will be stopped, which is no problem.
-  push-tag:
-    runs-on: ubuntu-22.04
+  # This job is used to check if a release with the same version already
+  # exists. If it does, terminate the job.
+  check-release:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Push tag
+      - name: Check release by url
         run: |
-          git tag -a ${{ env.VERSION }} -m "Release ${{ env.VERSION }}" || exit 0
-          git push origin ${{ env.VERSION }}
+          release_url=$(curl -s https://api.github.com/repos/BartSte/trayicon/releases/tags/Release%200.0.0 | jq -r '.url')
+          [[ "$release_url" == "null" ]]
 
+  # The build-release job is used to build the project on a linux machine.
   build-release:
-    runs-on: ubuntu-22.04
+    needs: check-release
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,11 +74,19 @@ jobs:
           name: linux-tarball
           path: ./build/*.tar.gz
 
+  # The build-windows-release job is used to build the project on a windows
+  # machine.
   build-windows-release:
+    needs: check-release
     runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Make qt-version.txt
         run: |
@@ -91,15 +102,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-qt-
 
-      - name: Set up Visual Studio shell
-        uses: egor-tensin/vs-shell@v2
-        with:
-          arch: x64
-
       - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
         name: Install dependencies
         run: |
           .\scripts\setup.ps1 --static
+
+      - if: ${{ steps.cache-qt-windows.outputs.cache-hit == 'true' }}
+        name: Install dependencies with cached Qt
+        run: |
+          echo "Nothong to do!"
 
       - name: Build project
         run: |
@@ -112,33 +123,12 @@ jobs:
           name: windows-standalone-exe
           path: .\build\app\*.exe
 
-  # This job is used to check if a release with the same version already
-  # exists. If the release exists, the output exists is set to true, otherwise
-  # it is set to false.
-  check-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get the release by tag
-        id: get_release
-        run: |
-          release_url=$(curl -s https://api.github.com/repos/BartSte/trayicon/releases/tags/Release%200.0.0 | jq -r '.url')
-          if [ "$release_url" == "null" ]; then
-            echo "Release not found."
-            echo "::set-output name=exists::false"
-          else
-            echo "Release found: $release_url"
-            echo "::set-output name=exists::true"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Only create a release if the check-release job has found that no release
-  # with the same version exists. The artifacts are downloaded from the build
-  # jobs and uploaded to the release.
+  # If all jobs are successful, the make-release job is used to create the
+  # release with tag $RELEASE_VERSION. The artifacts are downloaded from the
+  # build jobs and uploaded to the release.
   make-release:
-    needs: [build-release, build-windows-release]
-    runs-on: ubuntu-22.04
-    if: needs.check-release.outputs.exists == 'false'
+    needs: [check-release, build-release, build-windows-release]
+    runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -151,8 +141,8 @@ jobs:
           files: |
             linux-tarball/*.tar.gz
             windows-standalone-exe/*.exe
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          release_name: Release ${{ env.RELEASE_VERSION }}
           body: |
-            Release ${{ env.VERSION }}
+            Release ${{ env.RELEASE_VERSION }}
             - [Changelog](https://github.com/BartSte/trayicon/CHANGELOG.md)
