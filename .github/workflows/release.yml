@@ -77,15 +77,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Visual Studio shell
-        uses: egor-tensin/vs-shell@v2
-        with:
-          arch: x64
-
       - name: Make qt-version.txt
         run: |
           echo $QT_VERSION > qt-version.txt
           mkdir -p 3rdparty/Qt
+
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Set up cache qt static
         id: cache-qt-window
@@ -93,7 +93,8 @@ jobs:
         with:
           path: 3rdparty/Qt
           key: ${{ runner.os }}-qt-${{ hashFiles('qt-version.txt') }}
-          restore-keys: ${{ runner.os }}-qt-
+          restore-keys: |
+            ${{ runner.os }}-qt-
 
       - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
         name: Install dependencies
