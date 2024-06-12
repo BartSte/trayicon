@@ -102,15 +102,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-qt-
 
-      - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
-        name: Install dependencies
-        run: |
-          .\scripts\setup.ps1 --static
-
       - if: ${{ steps.cache-qt-windows.outputs.cache-hit == 'true' }}
         name: Install dependencies with cached Qt
         run: |
           echo "Nothong to do!"
+
+      - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
+        name: Install dependencies
+        run: |
+          .\scripts\setup.ps1 --static
 
       - name: Build project
         run: |
