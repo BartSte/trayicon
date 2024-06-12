@@ -16,6 +16,7 @@ class App : public QApplication {
  private:
   Q_OBJECT;
 
+  bool process_restart;
   Cli cli;
   QSystemTrayIcon gui;
   QMenu menu;
@@ -25,13 +26,16 @@ class App : public QApplication {
   static std::string description;
   static std::string tooltip;
 
+  void connect_logging_signals();
   void connect_signals();
   void set_logger(const std::string &log_level);
   void print_help();
   void print_version();
   void show_gui(const cxxopts::ParseResult &opts);
   bool start_process(const std::string &command);
+  bool start_process(const QString &command);
   bool stop_process();
+  void restart_process();
   int run_command(const cxxopts::ParseResult &opts);
 
  public:
