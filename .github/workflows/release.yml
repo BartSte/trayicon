@@ -102,20 +102,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-qt-
 
-      - if: ${{ steps.cache-qt-windows.outputs.cache-hit == 'true' }}
-        name: Install dependencies with cached Qt
-        run: |
-          echo "Nothong to do!"
-
       - if: ${{ steps.cache-qt-windows.outputs.cache-hit != 'true' }}
         name: Install dependencies
         run: |
           .\scripts\setup.ps1 --static
 
+      - if: ${{ steps.cache-qt-windows.outputs.cache-hit == 'true' }}
+        name: Install dependencies with cached Qt
+        run: |
+          echo "Nothong to do!"
+
       - name: Build project
         run: |
           .\scripts\configure.ps1
           cmake --build ./build --config Release
+          mv ./build/app/trayicon.exe ./build/app/trayicon-$RELEASE_VERSION.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
