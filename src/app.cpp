@@ -89,8 +89,8 @@ void App::connect_signals() {
     }
   };
   connect(&process, &QProcess::finished, handle_finished);
+  connect(&process, &QProcess::errorOccurred, this, handle_finished);
   connect(this, &QApplication::aboutToQuit, this, &App::stop_process);
-  connect(&process, &QProcess::errorOccurred, this, QApplication::quit);
 }
 
 /**
@@ -147,6 +147,9 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
     return;
   }
 
+  auto command = QString::fromStdString(opts["command"].as<std::string>());
+  gui.setToolTip(command);
+
   menu.addAction("Quit", QApplication::quit);
   menu.addAction("Restart", this, &App::restart_process);
   gui.setContextMenu(&menu);
@@ -155,10 +158,9 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
   spdlog::debug("Icon path: {}", icon_path);
   gui.setIcon(QIcon(QString::fromStdString(icon_path)));
 
-  auto command = opts["command"].as<std::string>();
-  gui.setToolTip(QString::fromStdString(command));
-
   gui.show();
+  gui.showMessage("Start", "Running command: " + command,
+                  QSystemTrayIcon::Information, 5000);
 }
 
 /**
