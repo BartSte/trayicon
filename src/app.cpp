@@ -50,6 +50,7 @@ std::string App::description =
  */
 App::App(int &argc, char **argv)
     : QApplication(argc, argv),
+      last_command(""),
       process_restart(false),
       cli(argc, argv, App::name, App::description),
       gui(),
@@ -173,6 +174,7 @@ bool App::start_process(const std::string &command) {
 }
 
 bool App::start_process(const QString &command) {
+  last_command = command; 
   spdlog::info("Running command: {}", command.toStdString());
   process.setProcessChannelMode(QProcess::ForwardedChannels);
   process.startCommand(command);
@@ -192,7 +194,7 @@ bool App::stop_process() {
 void App::restart_process() {
   process_restart = true;
   stop_process();
-  start_process(process.program());
+  start_process(last_command);
   process_restart = false;
 }
 

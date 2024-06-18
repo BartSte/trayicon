@@ -16,6 +16,7 @@ class App : public QApplication {
  private:
   Q_OBJECT;
 
+  QString last_command;
   bool process_restart;
   Cli cli;
   QSystemTrayIcon gui;
