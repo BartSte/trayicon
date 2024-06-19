@@ -17,7 +17,7 @@ env:
   # build-windows-release jobs, so the artifacts are always available for we
   # can check if the build was successful. The created artifacts are only
   # uploaded if a new release is created.
-  RELEASE_VERSION: v0.2.1
+  RELEASE_VERSION: v0.2.2
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
 
@@ -119,7 +119,7 @@ jobs:
         run: |
           .\scripts\configure.ps1
           cmake --build ./build --config Release
-          mv ./build/app/trayicon.exe ./build/app/trayicon-$RELEASE_VERSION.exe
+          mv ./build/app/trayicon.exe ./build/app/trayicon-$Env:RELEASE_VERSION.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
