@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 env:
   # By setting the RELEASE_VERSION environment variable, the version of the release can
@@ -14,7 +17,7 @@ env:
   # build-windows-release jobs, so the artifacts are always available for we
   # can check if the build was successful. The created artifacts are only
   # uploaded if a new release is created.
-  RELEASE_VERSION: v0.1.0
+  RELEASE_VERSION: v0.2.0
   QT_INSTALLER_JWT_TOKEN: ${{ secrets.QT_INSTALLER_JWT_TOKEN }}
   QT_VERSION: 6.7.1
 
@@ -127,7 +130,12 @@ jobs:
   # If all jobs are successful, the make-release job is used to create the
   # release with tag $RELEASE_VERSION. The artifacts are downloaded from the
   # build jobs and uploaded to the release.
+  #
+  # This job is only run if a push is made to the main branch. When a pull
+  # request is made, this job is omitted. As a result, we can check if the
+  # release will be build correctly, without actually creating the release.
   make-release:
+    if: github.event_name == 'push'
     needs: [check-release, build-release, build-windows-release]
     runs-on: ubuntu-latest
     steps:

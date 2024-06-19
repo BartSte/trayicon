@@ -78,7 +78,7 @@ void App::connect_logging_signals() {
                   err2str(error));
   };
 
-  connect(this, &QApplication::aboutToQuit, log_quit);
+  connect(this, &App::aboutToQuit, log_quit);
   connect(&process, &QProcess::errorOccurred, log_error);
   connect(&process, &QProcess::started, log_started);
   connect(&process, &QProcess::finished, log_finished);
@@ -99,7 +99,7 @@ void App::connect_signals() {
   connect(&process, &QProcess::finished, handle_finished);
   connect(&process, &QProcess::errorOccurred, handle_finished);
   connect(&process, &QProcess::started, show_start_message);
-  connect(this, &QApplication::aboutToQuit, this, &App::stop_process);
+  connect(this, &App::aboutToQuit, this, &App::stop_process);
 }
 
 /**
@@ -158,10 +158,10 @@ void App::show_gui(const cxxopts::ParseResult &opts) {
 
   QString command = QString::fromStdString(opts["command"].as<std::string>());
   QString icon = QString::fromStdString(opts["icon"].as<std::string>());
-  gui = std::make_unique<Gui>(command, icon);
+  gui = std::make_unique<Gui>(command, icon, process, this);
 
-  gui->contextMenu()->addAction("Quit", this, &App::quit);
   gui->contextMenu()->addAction("Restart", this, &App::restart_process);
+  gui->contextMenu()->addAction("Quit", this, &App::quit);
 
   gui->show();
 }
