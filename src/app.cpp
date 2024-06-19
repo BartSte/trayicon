@@ -1,3 +1,4 @@
+#include "gui.hpp"
 #include <QApplication>
 #include <QIcon>
 #include <QMenu>
@@ -7,6 +8,7 @@
 #include <cxxopts.hpp>
 #include <exceptions.hpp>
 #include <iostream>
+#include <qcontainerfwd.h>
 #include <qprocess.h>
 #include <signal_handlers.hpp>
 #include <spdlog/spdlog.h>
@@ -53,8 +55,6 @@ App::App(int &argc, char **argv)
       last_command(""),
       process_restart(false),
       cli(argc, argv, App::name, App::description),
-      gui(),
-      menu(),
       process() {
   setApplicationDisplayName(QString::fromStdString(App::name));
   setApplicationName(QString::fromStdString(App::name));
@@ -77,6 +77,7 @@ void App::connect_logging_signals() {
                   "killed instead of terminated. Error: {}",
                   err2str(error));
   };
+
   connect(this, &QApplication::aboutToQuit, log_quit);
   connect(&process, &QProcess::errorOccurred, log_error);
   connect(&process, &QProcess::started, log_started);
@@ -89,8 +90,15 @@ void App::connect_signals() {
       quit();
     }
   };
+  auto show_start_message = [&]() {
+    if (gui) {
+      gui->show_start_message();
+    }
+  };
+
   connect(&process, &QProcess::finished, handle_finished);
-  connect(&process, &QProcess::errorOccurred, this, handle_finished);
+  connect(&process, &QProcess::errorOccurred, handle_finished);
+  connect(&process, &QProcess::started, show_start_message);
   connect(this, &QApplication::aboutToQuit, this, &App::stop_process);
 }
 
@@ -143,41 +151,26 @@ void App::print_version() {
 }
 
 void App::show_gui(const cxxopts::ParseResult &opts) {
-  if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+  if (!Gui::isSystemTrayAvailable()) {
     spdlog::error("System tray not available. Not showing GUI.");
     return;
   }
 
-  auto command = QString::fromStdString(opts["command"].as<std::string>());
-  gui.setToolTip(command);
+  QString command = QString::fromStdString(opts["command"].as<std::string>());
+  QString icon = QString::fromStdString(opts["icon"].as<std::string>());
+  gui = std::make_unique<Gui>(command, icon);
 
-  menu.addAction("Quit", QApplication::quit);
-  menu.addAction("Restart", this, &App::restart_process);
-  gui.setContextMenu(&menu);
+  gui->contextMenu()->addAction("Quit", this, &App::quit);
+  gui->contextMenu()->addAction("Restart", this, &App::restart_process);
 
-  std::string icon_path = opts["icon"].as<std::string>();
-  spdlog::debug("Icon path: {}", icon_path);
-  gui.setIcon(QIcon(QString::fromStdString(icon_path)));
-
-  gui.show();
-  gui.showMessage("Start", "Running command: " + command,
-                  QSystemTrayIcon::Information, 5000);
+  gui->show();
 }
 
-/**
- * @brief Start the command as a process.
- *
- * @param command
- */
 bool App::start_process(const std::string &command) {
-  return start_process(QString::fromStdString(command));
-}
-
-bool App::start_process(const QString &command) {
-  last_command = command; 
-  spdlog::info("Running command: {}", command.toStdString());
+  last_command = command;
+  spdlog::info("Running command: {}", command);
   process.setProcessChannelMode(QProcess::ForwardedChannels);
-  process.startCommand(command);
+  process.startCommand(QString::fromStdString(command));
   return process.waitForStarted();
 }
 
