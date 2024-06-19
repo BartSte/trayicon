@@ -1,3 +1,4 @@
+#include "gui.hpp"
 #include <QApplication>
 #include <QIcon>
 #include <QMenu>
@@ -7,6 +8,7 @@
 #include <cxxopts.hpp>
 #include <exceptions.hpp>
 #include <iostream>
+#include <qcontainerfwd.h>
 #include <qprocess.h>
 #include <signal_handlers.hpp>
 #include <spdlog/spdlog.h>
@@ -50,25 +52,22 @@ std::string App::description =
  */
 App::App(int &argc, char **argv)
     : QApplication(argc, argv),
+      last_command(""),
+      process_restart(false),
       cli(argc, argv, App::name, App::description),
-      gui(),
-      menu(),
       process() {
   setApplicationDisplayName(QString::fromStdString(App::name));
   setApplicationName(QString::fromStdString(App::name));
   setApplicationVersion(PROJECT_VERSION);
+  connect_logging_signals();
   connect_signals();
   setup_signal_handlers();
 }
 
-/**
- * @brief The QProcess signals are connected to the QApplication, and vice
- * versa, such that they both quit when the other quits.
- */
-void App::connect_signals() {
+void App::connect_logging_signals() {
   auto log_started = [&]() { spdlog::debug("Process started"); };
   auto log_finished = [&](int exit_code) {
-    spdlog::debug("Process finished");
+    spdlog::debug("Process finished. Restart is set to: {}", process_restart);
     spdlog::debug("Process exit code: {}", process.exitCode());
     spdlog::debug("Process error: {}", err2str(process.error()));
   };
@@ -83,10 +82,24 @@ void App::connect_signals() {
   connect(&process, &QProcess::errorOccurred, log_error);
   connect(&process, &QProcess::started, log_started);
   connect(&process, &QProcess::finished, log_finished);
+}
 
-  connect(this, &QApplication::aboutToQuit, [&]() { stop_process(); });
-  connect(&process, &QProcess::errorOccurred, this, QApplication::quit);
-  connect(&process, &QProcess::finished, this, QApplication::quit);
+void App::connect_signals() {
+  auto handle_finished = [&]() {
+    if (!process_restart && !closingDown()) {
+      quit();
+    }
+  };
+  auto show_start_message = [&]() {
+    if (gui) {
+      gui->show_start_message();
+    }
+  };
+
+  connect(&process, &QProcess::finished, handle_finished);
+  connect(&process, &QProcess::errorOccurred, handle_finished);
+  connect(&process, &QProcess::started, show_start_message);
+  connect(this, &QApplication::aboutToQuit, this, &App::stop_process);
 }
 
 /**
@@ -138,32 +151,24 @@ void App::print_version() {
 }
 
 void App::show_gui(const cxxopts::ParseResult &opts) {
-  if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+  if (!Gui::isSystemTrayAvailable()) {
     spdlog::error("System tray not available. Not showing GUI.");
     return;
   }
 
-  menu.addAction("Quit", QApplication::quit);
-  gui.setContextMenu(&menu);
+  QString command = QString::fromStdString(opts["command"].as<std::string>());
+  QString icon = QString::fromStdString(opts["icon"].as<std::string>());
+  gui = std::make_unique<Gui>(command, icon);
 
-  std::string icon_path = opts["icon"].as<std::string>();
-  spdlog::debug("Icon path: {}", icon_path);
-  gui.setIcon(QIcon(QString::fromStdString(icon_path)));
+  gui->contextMenu()->addAction("Quit", this, &App::quit);
+  gui->contextMenu()->addAction("Restart", this, &App::restart_process);
 
-  auto program = opts["command"].as<std::string>();
-  gui.setToolTip(QString::fromStdString(program));
-
-  gui.show();
+  gui->show();
 }
 
-/**
- * @brief Start the command as a process.
- *
- * @param command
- */
 bool App::start_process(const std::string &command) {
+  last_command = command;
   spdlog::info("Running command: {}", command);
-
   process.setProcessChannelMode(QProcess::ForwardedChannels);
   process.startCommand(QString::fromStdString(command));
   return process.waitForStarted();
@@ -179,11 +184,17 @@ bool App::stop_process() {
   }
 }
 
+void App::restart_process() {
+  process_restart = true;
+  stop_process();
+  start_process(last_command);
+  process_restart = false;
+}
+
 int App::run_command(const cxxopts::ParseResult &opts) {
   if (start_process(opts["command"].as<std::string>())) {
     spdlog::debug("Starting event loop");
     return QApplication::exec();
-
   } else {
     spdlog::error("Process failed to start: {}", err2str(process.error()));
     return 1;
