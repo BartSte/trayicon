@@ -1,10 +1,11 @@
 #pragma once
 
 #include <QApplication>
-#include <cli.hpp>
-#include <gui.hpp>
 #include <memory>
 #include <qprocess.h>
+
+#include <cli.hpp>
+#include <gui.hpp>
 
 /**
  * @class App
@@ -22,20 +23,16 @@ class App : public QApplication {
   QProcess process;
   std::unique_ptr<Gui> gui;
 
-  static std::string name;
-  static std::string description;
-  static std::string tooltip;
-
   void connect_logging_signals();
   void connect_signals();
   void set_logger(const std::string &log_level);
   void print_help();
   void print_version();
   void show_gui(const cxxopts::ParseResult &opts);
+  int run_command(const cxxopts::ParseResult &opts);
   bool start_process(const std::string &command);
   bool stop_process();
   void restart_process();
-  int run_command(const cxxopts::ParseResult &opts);
 
  public:
   App(int &argc, char **argv);

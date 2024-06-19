@@ -1,8 +1,9 @@
 #include <QApplication>
-#include <app.hpp>
 #include <csignal>
 #include <signal_handlers.hpp>
 #include <spdlog/spdlog.h>
+
+#include <app.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
 

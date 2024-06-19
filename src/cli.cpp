@@ -1,6 +1,7 @@
-#include <cli.hpp>
 #include <cxxopts.hpp>
 #include <string>
+
+#include <cli.hpp>
 
 #define DEFAULT cxxopts::value<std::string>()->default_value
 

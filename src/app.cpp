@@ -1,20 +1,17 @@
-#include "gui.hpp"
 #include <QApplication>
 #include <QIcon>
-#include <QMenu>
 #include <QString>
-#include <app.hpp>
-#include <cli.hpp>
 #include <cxxopts.hpp>
-#include <exceptions.hpp>
 #include <iostream>
-#include <qcontainerfwd.h>
 #include <qprocess.h>
 #include <signal_handlers.hpp>
 #include <spdlog/spdlog.h>
 #include <string>
-#include <version.h>
 
+#include <app.hpp>
+#include <cli.hpp>
+#include <gui.hpp>
+#include <version.h>
 /**
  * @brief Converts a QProcess::ProcessError to a string.
  *
@@ -39,9 +36,9 @@ std::string err2str(QProcess::ProcessError error) {
   }
 }
 
-std::string App::name = "trayicon";
+std::string NAME = "trayicon";
 
-std::string App::description =
+std::string DESCRIPTION =
     "Display an icon in the system tray to control your application";
 
 /**
@@ -54,10 +51,10 @@ App::App(int &argc, char **argv)
     : QApplication(argc, argv),
       last_command(""),
       process_restart(false),
-      cli(argc, argv, App::name, App::description),
+      cli(argc, argv, NAME, DESCRIPTION),
       process() {
-  setApplicationDisplayName(QString::fromStdString(App::name));
-  setApplicationName(QString::fromStdString(App::name));
+  setApplicationDisplayName(QString::fromStdString(NAME));
+  setApplicationName(QString::fromStdString(NAME));
   setApplicationVersion(PROJECT_VERSION);
   connect_logging_signals();
   connect_signals();

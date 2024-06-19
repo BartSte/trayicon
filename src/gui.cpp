@@ -1,7 +1,8 @@
-#include <gui.hpp>
 #include <qobject.h>
 #include <qsystemtrayicon.h>
 #include <spdlog/spdlog.h>
+
+#include <gui.hpp>
 
 Gui::Gui(const QString command, const QString icon, const QProcess &process,
          QObject *parent)
@@ -10,7 +11,7 @@ Gui::Gui(const QString command, const QString icon, const QProcess &process,
   setToolTip("Running command: " + command);
   setContextMenu(&menu);
 
-  connect(this, &QSystemTrayIcon::activated, this, &Gui::on_activated);
+  connect(this, &Gui::activated, this, &Gui::on_activated);
 
   spdlog::info("Icon set to: {}", icon.toStdString());
   spdlog::info("Tooltip set to: {}", command.toStdString());
