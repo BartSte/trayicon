@@ -3,9 +3,9 @@ Dim trayicon_path, trayicon_opts, cmd
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' Configuration
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-trayicon_path = ""  ' The path to the trayicon executable
-trayicon_opts = ""  ' The options to pass to trayicon 
-cmd = ""  ' The command to run by trayicon
+trayicon_path = "trayicon.exe"  ' The path to the trayicon executable
+trayicon_opts = "--icon kmonad.ico"  ' The options to pass to trayicon 
+cmd = "kmonad.exe config.kbd"  ' The command to run by trayicon
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' Concatenate the command to run and execute it.
