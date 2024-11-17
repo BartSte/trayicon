@@ -2,7 +2,7 @@
 
 This readme describes how to create a tray icon for kmonad on Windows.
 
-[demo]()
+![demo](https://media.githubusercontent.com/media/BartSte/trayicon/refs/heads/develop/examples/windows/kmonad/trayicon-kmonad.gif)
 
 ## Installation
 
