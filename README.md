@@ -16,6 +16,10 @@
 given command. The icon can be used to restart or quit the command. It is also
 possible to set a custom icon for the command.
 
+The demo below shows an example where the program [kmonad](https://github.com/kmonad/kmonad/releases/latest)
+is executed with the corresponding icon on Windows.
+![demo](https://media.githubusercontent.com/media/BartSte/trayicon/refs/heads/develop/examples/windows/kmonad/trayicon-kmonad.gif)
+
 ## Installation
 
 ### Precompiled
