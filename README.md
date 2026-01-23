@@ -68,6 +68,10 @@ The detailed steps are provided below. MacOS is not supported at the moment.
   building them from source.
 
 - Run the `.\scripts\configure.ps1` script to configure the build.
+  When this script is run inside a Visual Studio developer shell, it will
+  default to a static MSVC runtime (`/MT`) unless you already provided a
+  `CMAKE_MSVC_RUNTIME_LIBRARY` argument. This avoids a vcredist dependency for
+  the resulting executable.
 
 - Run the `cmake --build build --config Release` command to build the program
   and create an executable.

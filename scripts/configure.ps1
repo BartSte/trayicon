@@ -50,6 +50,9 @@ function Configure() {
     Write-Output "Source $Source"
     Write-Output "Build $Build"
     Write-Output "QtDir: $QtDir"
+    if ($env:VSCMD_VER -and -not ($CMakeArgs -match 'CMAKE_MSVC_RUNTIME_LIBRARY')) {
+        $CMakeArgs += "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
+    }
     cmake -G "Ninja" -S "$Source" -B "$Build" -DCMAKE_PREFIX_PATH="$QtDir\lib\cmake" -DCMAKE_BUILD_TYPE="$BuildType" $CMakeArgs 
 }
 
