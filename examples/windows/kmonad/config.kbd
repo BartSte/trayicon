@@ -1,0 +1,103 @@
+(defcfg
+  input (low-level-hook)
+  output (send-event-sink)
+
+  ;; Comment this if you want unhandled events not to be emitted.
+  fallthrough true
+
+  ;; Set this to false to disable any command-execution in KMonad.
+  allow-cmd true
+)
+
+(defsrc
+      q w e r t y u i o p
+      a s d f g h j k l ;
+ lsft z x c v b n m , . /
+    lmet lalt space ralt rctl
+)
+
+(defalias
+    ma (tap-hold-next-release 200 a lmet)
+    ar (tap-hold-next-release 200 r lalt)
+    ss (tap-hold-next-release 200 s lsft)
+    ct (tap-hold-next-release 200 t lctl)
+
+    cn (tap-hold-next-release 200 n rctl)
+    se (tap-hold-next-release 200 e rsft)
+    ai (tap-hold-next-release 200 i lalt)
+    mo (tap-hold-next-release 200 o rmet)
+
+    m1 (around rmet 1)
+    m2 (around rmet 2)
+    m3 (around rmet 3)
+    m4 (around rmet 4)
+    m5 (around rmet 5)
+    m6 (around rmet 6)
+    m7 (around rmet 7)
+    m8 (around rmet 8)
+    eq (tap-macro space = space)
+
+    num_f (tap-hold-next-release 200 f (layer-toggle numpad))
+    sym_u (tap-hold-next-release 200 u (layer-toggle symbols))
+    fk_g (tap-hold-next-release 200 g (layer-toggle fkeys))
+    nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation_right))
+    nav_ret (tap-hold-next-release 200 return (layer-toggle navigation_left))
+    mac_d (tap-hold-next-release 200 d (layer-toggle macroright))
+    mac_h (tap-hold-next-release 200 h (layer-toggle macroleft))
+)
+
+(deflayer homerowmods
+    q   w   @num_f  p       b      j   l        @sym_u  y   ;
+    @ma @ar @ss     @ct     @fk_g  m   @cn      @se     @ai @mo
+    z   x   c       @mac_d  v   _  k   @mac_h   ,       .   /
+              esc @nav_tab space @nav_ret del
+)
+
+(deflayer navigation_right
+    _    _    _    _    _  Home     PageDown  PageUp  End       pp
+    lmet lalt lsft lctl _  KeyLeft  KeyDown   KeyUp   KeyRight  _
+    _    _    _    _    _  _        _         _       _         prev next
+         _ _ bspc  _    _
+)
+
+(deflayer navigation_left
+    _  7  2  _  _  _  _    _    _    _
+    6  _  3  1  _  _  rctl rsft ralt rmet
+    _  5  4  _  _  _  _    _    _    _    _
+         _ _ _ _ _
+)
+
+(deflayer numpad
+     _  _  _  _  _  *  7  8  9  +
+     lmet lalt lsft lctl _  \  4  5  6  -
+  _  _  _  _  _  _  |  1  2  3  &
+              _  _  =  0  _
+)
+
+(deflayer symbols
+     !  @  #  $  %  _  _  _  _  _
+     {  [  \( '  `  _  rctl rsft ralt rmet
+  }  ]  \) "  ~  _  _  _  _  _  _
+              _ ^ \_   _  _
+)
+
+(deflayer fkeys
+     _    _    _    _    _  pause  F7 F8 F9 F10
+     lmet lalt lsft lctl _  slck  F4 F5 F6 F11
+  _  _    _    _    _    _  ins    F1 F2 F3 F12
+                _  _  _  _  _
+)
+
+(deflayer macroright
+  _ _ _ _ _ _ _ _ _ _
+  _ _ _ _ _ _ _ _ _ _
+ _ _ _ _ _ _ _ _ _ _ _
+       _ _ @eq _ _
+)
+
+(deflayer macroleft
+  _ _ _ _ _ _ _ _ _ _
+  _ _ _ _ _ _ _ _ _ _
+ _ _ _ _ _ _ _ _ _ _ _
+       _ _ _ _ _
+)
