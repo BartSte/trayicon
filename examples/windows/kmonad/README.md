@@ -18,8 +18,9 @@ Place both executables in the same folder as the other files.
 ## Configuration
 
 Open the `start.vbs` file in a text editor and follow the instructions in the
-file to configure how trayicon is executed. The `config.kbd` file is an empty
-kmonad configuration file that you can replace with your own.
+file to configure how trayicon is executed. The included `config.kbd` file is an
+example home-row-modifier KMonad configuration that you can replace with your
+own.
 
 ## Run
 
